@@ -18,7 +18,8 @@ pipeline {
         }
         stage('push') {
             steps {
-                sh 'echo "pushed to dockerhub"'
+                sh 'docker login -u $DOCKERHUB_CREDS_USR -p $DOCKERHUB_CREDS_PSW'
+                sh 'docker push $DOCKERHUB_CREDS_USR/$CONTAINER_NAME'
             }
         }
     }
