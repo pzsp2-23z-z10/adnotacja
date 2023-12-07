@@ -25,9 +25,11 @@ def add():
         file = rq.files['file']
         if parse_data.is_text_file(file):
             data = parse_data.read_file(file)
-            token = requests.post(f"http://{HOST}:{BACKEND_PORT}/analysis/new", data=data).json()
-            print(token)
-        return render_template('uploaded.html')
+            try:
+                token = requests.post(f"http://{HOST}:{BACKEND_PORT}/analysis/new", data=data).json()['token']
+            except Exception:
+                token = None
+        return render_template('uploaded.html', token=token)
 
 
 @app.route('/analysis/status', methods=['GET'])
