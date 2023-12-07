@@ -2,11 +2,13 @@ pipeline {
     agent any
     environment {
         DOCKERHUB_CREDS = credentials('dockerhub-creds')
+        DOCKERFILE_PATH = './dummy_docker/docker'
+        CONTAINER_NAME = 'dummy_docker'
     }
     stages {
         stage('build') {
             steps {
-                sh 'echo "build completed"'
+                sh 'docker build -t $DOCKERHUB_CREDS_USR/$CONTAINER_NAME $DOCKERFILE_PATH'
             }
         }
         stage('test') {
