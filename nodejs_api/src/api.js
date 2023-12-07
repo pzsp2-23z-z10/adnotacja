@@ -19,7 +19,7 @@ router.post('/new', async (req, res, next) => {
   }*/
   let result
   try {
-    result = await db.addAanlysis(req.body); //still await for errors
+    result = await db.addAnalysis(req.body); //still await for errors
   }
   catch (err){
     return next("Invalid request")

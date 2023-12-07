@@ -8,7 +8,7 @@ async function getAnalysis(id){
 
 async function addAnalysis(q){
 
-	//@TODO check if valid, generate token
+	//@TODO check if valid
 	console.log("Starting analysis:",q)
 	return Math.floor(new Date().getTime() / 1000)
 }
