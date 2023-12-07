@@ -26,8 +26,9 @@ def add():
         if parse_data.is_text_file(file):
             data = parse_data.read_file(file)
             try:
-                token = requests.post(f"http://{HOST}:{BACKEND_PORT}/analysis/new", data=data).json()['token']
-            except Exception:
+                link = f"http://{HOST}:{BACKEND_PORT}/analysis/new"
+                token = requests.post(link, json=data).json()['token']
+            except Exception as e:
                 token = None
         return render_template('uploaded.html', token=token)
 

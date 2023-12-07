@@ -1,12 +1,12 @@
 const express = require('express')
 const db = require('./database_operations.js')
 const router = express.Router()
+const bodyParser = require("body-parser")
 
 app = express()
-app.use(express.json());
-
+app.use(express.json({limit: '10mb'}));
 app.use('/analysis', router)
-
+app.use(bodyParser.json({limit: '10mb'}));
 router.post('/new', async (req, res, next) => {
 /*
   #swagger.description = 'Create new analysis request'
