@@ -4,6 +4,7 @@ from configure import PORT, HOST, BACKEND_PORT
 import requests
 from uuid import uuid4
 from datetime import timedelta
+import parse_data
 
 
 app = Flask(__name__)
@@ -22,6 +23,10 @@ def add():
         return render_template('upload.html')
     elif rq.method == 'POST':
         file = rq.files['file']
+        if parse_data.is_text_file(file):
+            data = parse_data.read_file(file)
+            token = requests.post(f"http://{HOST}:{BACKEND_PORT}/analysis/new", data=data).json()
+            print(token)
         return render_template('uploaded.html')
 
 
