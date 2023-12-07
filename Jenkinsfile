@@ -1,9 +1,14 @@
 pipeline {
-    agent { docker { image 'python:3.12.0-alpine3.18' } }
+    agent any
+    environment {
+        DOCKERHUB_CREDS = credentials('dockerhub-creds')
+        DOCKERFILE_PATH = './dummy_docker/docker'
+        CONTAINER_NAME = 'dummy_docker'
+    }
     stages {
         stage('build') {
             steps {
-                sh 'echo "build completed"'
+                sh 'docker build -t $DOCKERHUB_CREDS_USR/$CONTAINER_NAME $DOCKERFILE_PATH'
             }
         }
         stage('test') {
@@ -13,7 +18,8 @@ pipeline {
         }
         stage('push') {
             steps {
-                sh 'echo "pushed to dockerhub"'
+                sh 'docker login -u $DOCKERHUB_CREDS_USR -p $DOCKERHUB_CREDS_PSW'
+                sh 'docker push $DOCKERHUB_CREDS_USR/$CONTAINER_NAME'
             }
         }
     }
