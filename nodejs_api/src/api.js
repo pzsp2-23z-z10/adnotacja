@@ -13,9 +13,9 @@ router.post('/new', async (req, res, next) => {
   #swagger.requestBody = {
     required: true,
     content:
-      application/octet-stream:
+      application/json:
         schema:
-          format: binary
+          format: {...}
   }*/
   let result
   try {
