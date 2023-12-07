@@ -3,7 +3,17 @@ pipeline {
     stages {
         stage('build') {
             steps {
-                sh 'python --version'
+                sh 'echo "build completed"'
+            }
+        }
+        stage('test') {
+            steps {
+                sh 'echo "tests passed"'
+            }
+        }
+        stage('push') {
+            steps {
+                sh 'echo "pushed to dockerhub"'
             }
         }
     }
