@@ -19,11 +19,3 @@ def read_file(file: FileStorage):
             dic[header] = line[idx[i]]
         data.append(dic)
     return data
-    data = {}
-    for header in allowed_headers:
-        data[header] = []
-    for line in file.stream.readlines():
-        line = line.decode('utf-8').split()
-        for i, header in enumerate(allowed_headers):
-            data[header].append(line[idx[i]])
-    return data
