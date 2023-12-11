@@ -16,7 +16,10 @@ pipeline {
                 sh 'echo "tests passed"'
             }
         }
-        stage('push') {
+        stage('push-master') {
+            when {
+                branch 'master'
+            }
             steps {
                 sh 'docker login -u $DOCKERHUB_CREDS_USR -p $DOCKERHUB_CREDS_PSW'
                 sh 'docker push $DOCKERHUB_CREDS_USR/$CONTAINER_NAME'
