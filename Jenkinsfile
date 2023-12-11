@@ -22,7 +22,16 @@ pipeline {
             }
             steps {
                 sh 'docker login -u $DOCKERHUB_CREDS_USR -p $DOCKERHUB_CREDS_PSW'
-                sh 'docker push $DOCKERHUB_CREDS_USR/$CONTAINER_NAME'
+                sh 'docker push $DOCKERHUB_CREDS_USR/$CONTAINER_NAME:master-latest'
+            }
+        }
+        stage('push-release') {
+            when {
+                branch 'release'
+            }
+            steps {
+                sh 'docker login -u $DOCKERHUB_CREDS_USR -p $DOCKERHUB_CREDS_PSW'
+                sh 'docker push $DOCKERHUB_CREDS_USR/$CONTAINER_NAME:latest'
             }
         }
     }
