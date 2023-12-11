@@ -22,6 +22,7 @@ pipeline {
             }
             steps {
                 sh 'docker login -u $DOCKERHUB_CREDS_USR -p $DOCKERHUB_CREDS_PSW'
+                sh 'docker tag $DOCKERHUB_CREDS_USR/$CONTAINER_NAME $DOCKERHUB_CREDS_USR/$CONTAINER_NAME:master-latest'
                 sh 'docker push $DOCKERHUB_CREDS_USR/$CONTAINER_NAME:master-latest'
             }
         }
