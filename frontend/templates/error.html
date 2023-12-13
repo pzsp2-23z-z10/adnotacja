@@ -3,6 +3,10 @@
 {% block title %} Error {% endblock %}
 
 {% block content %}
-    Nie można tego wysłać. Prawdopodobnie zły format lub uszkodzone dane.<br>
+    {% if mes %}
+        {{ mes }}<br>
+    {% elif err %}
+        {{ err }}<br>
+    {% endif %}
     <a href="/">Wróc</a><br>    
 {% endblock %}
