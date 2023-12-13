@@ -70,7 +70,7 @@ def status(token):
     elif res.status_code == 202:
         return render_template("notyet.html")
     elif res.status_code == 404:
-        session['mes'] = "Dane nie są jeszcze gotowe"
+        session['mes'] = "Zły token. Sprawdź czy na pewno podałeś poprawny token"
         return redirect(url_for("error"))
     return redirect(url_for("error"))
 
