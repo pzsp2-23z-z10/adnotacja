@@ -1,0 +1,12 @@
+{% extends 'layout.html' %}
+
+{% block title %} Error {% endblock %}
+
+{% block content %}
+    {% if mes %}
+        {{ mes }}<br>
+    {% elif err %}
+        {{ err }}<br>
+    {% endif %}
+    <a href="/">Wróc</a><br>    
+{% endblock %}

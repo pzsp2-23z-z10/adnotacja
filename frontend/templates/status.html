@@ -1,0 +1,35 @@
+{% extends 'layout.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Status</th>
+                <th scope="col">id</th>
+                <th scope="col">GENE</th>
+                <th scope="col">CHROM</th>
+                <th scope="col">POS</th>
+                <th scope="col">REF</th>
+                <th scope="col">ALT</th>
+                <th scope="col">Algorytm</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in data %}
+                <tr>
+                    <th scope="col"> {{item['status']}} </th>
+                    <th scope="col"> {{item['id']}} </th>
+                    <th scope="col"> {{item['data']['A']}} </th>
+                    <th scope="col"> {{item['data']['B']}} </th>
+                    <th scope="col"> </th>
+                    <th scope="col"> </th>
+                    <th scope="col"> </th>
+                    <th scope="col"> Pangolin </th>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="/">Wróc</a><br>
+{% endblock %}
