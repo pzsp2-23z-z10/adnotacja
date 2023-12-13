@@ -2,11 +2,10 @@
 
 {% block title %}Upload{% endblock %}
 
-{% block upload %}
+{% block content %}
     <form action="/analysis/add" method="post" enctype="multipart/form-data">
-        <label for="file">Select a file:</label>
         <input type="file" id="file" name="file" accept=".tsv">
         <br>
-        <input type="submit" value="Upload">
+        <input type="submit" value="Wyślij">
     </form>
 {% endblock %}

@@ -1,0 +1,11 @@
+{% extends 'layout.html' %}
+
+{% block title %} Status {% endblock %}
+
+{% block content %}
+    <form action="/analysis/status" method="get">
+        <label for="token">Token:</label>
+        <input type="text" id="token" name="token" required>
+        <button type="submit">Wyślij</button>
+    </form>    
+{% endblock %}

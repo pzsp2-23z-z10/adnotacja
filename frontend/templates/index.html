@@ -1,13 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Start</title>
-</head>
-<body>
-    <h1>Hello World!</h1>
-    <a href="/analysis/add"> Dodaj plik </a><br>
-    <a href="/analysis/status"> Zobacz status </a><br>
-</body>
-</html>
+{% extends 'layout.html' %}
+
+{% block title %}Start{% endblock %}
+
+{% block content %}
+    <h1>Witamy</h1>
+    Wyślij plik z danymi do analizy: 
+    <a href="/analysis/add"> dodaj plik </a><br>
+    Zobacz status
+    <a href="/analysis/status"> wyników </a><br>
+{% endblock %}
