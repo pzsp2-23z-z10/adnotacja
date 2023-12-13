@@ -1,8 +1,7 @@
 from flask import Flask, render_template, redirect
 from flask import request as rq, session, url_for
-from configure import PORT, HOST, BACKEND_PORT
+from configure import PORT, HOST, BACKEND_LINK
 import requests
-from uuid import uuid4
 from datetime import timedelta
 import parse_data
 
@@ -24,13 +23,25 @@ def add():
     elif rq.method == 'POST':
         file = rq.files['file']
         if parse_data.is_text_file(file):
-            data = parse_data.read_file(file)
             try:
-                link = f"http://{HOST}:{BACKEND_PORT}/analysis/new"
+                data = parse_data.read_file(file)
+                link = f"{BACKEND_LINK}/analysis/new"
                 token = requests.post(link, json=data).json()['token']
             except Exception as e:
-                token = None
-        return render_template('uploaded.html', token=token)
+                return redirect(url_for('error'))
+            return redirect(url_for('uploaded', token=token))
+        return redirect('index')
+
+
+@app.route('/analysis/added')
+def uploaded():
+    token = rq.args.get('token', None)
+    return render_template('uploaded.html', token=token)
+
+
+@app.route('/error', methods=['GET'])
+def error():
+    return render_template('error.html')
 
 
 @app.route('/analysis/status', methods=['GET'])
