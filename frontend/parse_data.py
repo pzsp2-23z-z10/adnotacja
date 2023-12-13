@@ -1,10 +1,4 @@
-import mimetypes
 from werkzeug.datastructures import FileStorage
-
-
-def is_text_file(file: FileStorage):
-    mime_type, _ = mimetypes.guess_type(file.filename)
-    return mime_type and mime_type.startswith('text')
 
 
 def read_file(file: FileStorage):

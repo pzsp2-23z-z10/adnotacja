@@ -4,6 +4,7 @@ from configure import PORT, HOST, BACKEND_LINK, ANALYSIS
 import requests
 from datetime import timedelta
 import parse_data
+import vcf
 
 
 app = Flask(__name__)
@@ -19,6 +20,7 @@ def requires_token(view_func):
         return view_func(token)
     return wrapper
 
+
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
@@ -30,15 +32,13 @@ def add():
         return render_template('upload.html')
     elif rq.method == 'POST':
         file = rq.files['file']
-        if parse_data.is_text_file(file):
-            try:
-                data = parse_data.read_file(file)
-                link = f"{BACKEND_LINK}/analysis/new"
-                token = requests.post(link, json=data).json()['token']
-            except Exception as e:
-                return redirect(url_for('error'))
+        try:
+            link = f"{BACKEND_LINK}/analysis/new"
+            token = requests.post(link, files={'file': file}).json()['token']
             return redirect(url_for('uploaded', token=token))
-        return redirect('index')
+        except Exception:
+            session['err'] = 'Zły format danych lub mogły zostać uszkodzone'
+            return redirect(url_for('error'))
 
 
 @app.route(f'/{ANALYSIS}/added')
@@ -49,28 +49,37 @@ def uploaded():
 
 @app.route('/error', methods=['GET'])
 def error():
-    return render_template('error.html')
+    mes = session.pop('mes', None)
+    err = session.pop('err', None)
+    return render_template('error.html', mes=mes, err=err)
 
 
 @app.route(f'/{ANALYSIS}/status', methods=['GET'])
 @requires_token
 def status(token):
     res = requests.get(f'{BACKEND_LINK}/analysis/status/{token}')
-    try:
-        data = res.json()
-    except Exception:
-        return redirect(url_for('error'))
-    if res.status_code == 500:
-        return redirect(url_for('error'))
-    elif res.status_code == 200:
+    if res.status_code == 200:
+        try:
+            data = res.json()
+        except Exception:
+            session['err'] = "Zły format danych. Możliwe, że dane zostały uszkodzone."
+            return redirect(url_for('error'))
         if isinstance(data, dict):
             data = [data]
         return render_template('status.html', data=data)
+    elif res.status_code == 202:
+        return render_template("notyet.html")
+    elif res.status_code == 404:
+        session['mes'] = "Zły token. Sprawdź czy na pewno podałeś poprawny token"
+        return redirect(url_for("error"))
+    return redirect(url_for("error"))
 
 
 @app.route(f'/{ANALYSIS}/token_input')
 def token_input():
-    return render_template("token_input.html")
+    data = rq.args.get('data', None)
+    
+    return render_template("token_input.html", data=data)
 
 
 if __name__ == "__main__":
