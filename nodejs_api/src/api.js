@@ -54,9 +54,16 @@ router.get('/status/:token', async (req, res, next) => {
   let token = req.params.token; //  #swagger.parameters['token'] = { description: 'analysis identifier, returned from `/new` endpoint', type:'string' }
 
   let result = await db.getAnalysis(token);
-  if (result.error)
-    return res.status(500).send();
-  return res.status(200).send(result);
+  if (result.error){
+    if (result.error=="Unknown token")
+      return res.status(404).send();
+    else
+      return res.status(500).send();
+  }
+  else if (result.status=="Not_ready")
+    return res.status(202).send(result);
+  else
+    return res.status(200).send(result);
 
 });
 
