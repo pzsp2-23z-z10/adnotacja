@@ -34,7 +34,7 @@ def add():
         file = rq.files['file']
         try:
             link = f"{BACKEND_LINK}/analysis/new"
-            token = requests.post(link, files={'file': file}).json()['token']
+            token = requests.post(link, files={'file': (rq.files['file'].filename, rq.files['file'])}).json()['token']
             return redirect(url_for('uploaded', token=token))
         except Exception:
             session['err'] = 'Zły format danych lub mogły zostać uszkodzone'
