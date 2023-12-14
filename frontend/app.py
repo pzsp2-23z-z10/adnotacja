@@ -34,7 +34,7 @@ def add():
         file = rq.files['file']
         try:
             link = f"{BACKEND_LINK}/analysis/new"
-            token = requests.post(link, files={'file': file}).json()['token']
+            token = requests.post(link, files={'file': (file.filename, file)}).json()['token']
             return redirect(url_for('uploaded', token=token))
         except Exception:
             session['err'] = 'Zły format danych lub mogły zostać uszkodzone'
@@ -70,7 +70,7 @@ def status(token):
     elif res.status_code == 202:
         return render_template("notyet.html")
     elif res.status_code == 404:
-        session['mes'] = "Zły token. Sprawdź czy na pewno podałeś poprawny token"
+        session['mes'] = "Zły token. Sprawdź czy na pewno podałeś poprawny token."
         return redirect(url_for("error"))
     return redirect(url_for("error"))
 
@@ -78,7 +78,6 @@ def status(token):
 @app.route(f'/{ANALYSIS}/token_input')
 def token_input():
     data = rq.args.get('data', None)
-    
     return render_template("token_input.html", data=data)
 
 

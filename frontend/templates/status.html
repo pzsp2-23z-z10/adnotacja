@@ -2,10 +2,10 @@
 
 {% block title %}Home{% endblock %}
 
-{% block content %}
+{% block table %}
     {% for item in data %}
     <h1>Wyniki dla "{{item['name']}}"</h1>
-    <table class="table">
+    <table class="table" align="left">
         <thead>
             <tr>
                 <th scope="col">CHROM</th>
