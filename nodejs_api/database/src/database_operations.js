@@ -20,6 +20,10 @@ async function addCalculationProgress(progress) {
     state.save();
 }
 
+async function getCalculationProgress(token) {
+    return CalculationProgress.findOne({"token":token})
+}
+
 async function modifyCalculationProgress(token, newProgress) {
     CalculationProgress.findOneAndUpdate({"token":token}, 
         {$set:{progress: newProgress}}, {new:true}
@@ -31,4 +35,4 @@ async function modifyCalculationProgress(token, newProgress) {
         console.error(err);
     })
 }
-module.exports = {addGenotype, addCalculationProgress,modifyCalculationProgress}
+module.exports = {addGenotype, addCalculationProgress,modifyCalculationProgress, getCalculationProgress}
