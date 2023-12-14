@@ -3,33 +3,29 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
+    {% for item in data %}
+    <h1>Wyniki dla "{{item['name']}}"</h1>
     <table class="table">
         <thead>
             <tr>
-                <th scope="col">Status</th>
-                <th scope="col">id</th>
-                <th scope="col">GENE</th>
                 <th scope="col">CHROM</th>
                 <th scope="col">POS</th>
+                <th scope="col">ID</th>
                 <th scope="col">REF</th>
                 <th scope="col">ALT</th>
-                <th scope="col">Algorytm</th>
+                <th scope="col">QUAL</th>
+                <th scope="col">FILTER</th>
+                <th scope="col">INFO</th>
             </tr>
         </thead>
         <tbody>
-            {% for item in data %}
                 <tr>
-                    <th scope="col"> {{item['status']}} </th>
-                    <th scope="col"> {{item['id']}} </th>
-                    <th scope="col"> {{item['data']['A']}} </th>
-                    <th scope="col"> {{item['data']['B']}} </th>
-                    <th scope="col"> </th>
-                    <th scope="col"> </th>
-                    <th scope="col"> </th>
-                    <th scope="col"> Pangolin </th>
+                    {% for field in item['result'][0]%}
+                    <th scope="col"> {{item['result'][0][field]}} </th>
+                    {% endfor %}
                 </tr>
-            {% endfor %}
         </tbody>
     </table>
+    {% endfor %}
     <a href="/">Wróc</a><br>
 {% endblock %}

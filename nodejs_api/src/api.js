@@ -1,30 +1,47 @@
 const express = require('express')
+const fs = require('fs')
+const fileUpload = require('express-fileupload');
+
 const db = require('./database_operations.js')
 const router = express.Router()
 const bodyParser = require("body-parser")
 
 app = express()
 app.use(express.json({limit: '10mb'}));
-app.use('/analysis', router)
 app.use(bodyParser.json({limit: '10mb'}));
+app.use(fileUpload());
+
+app.use('/analysis', router)
+
+const uploadDir = "/tmp/"
 router.post('/new', async (req, res, next) => {
 /*
   #swagger.description = 'Create new analysis request'
   #swagger.requestBody = {
     required: true,
     content:
-      application/json:
-        schema:
-          format: {...}
+      application/octet-stream:
+        name: "file"
   }*/
-  let result
-  try {
-    result = await db.addAnalysis(req.body); //still await for errors
+  if (!req.files || Object.keys(req.files).length === 0) {
+    return res.status(400).send('No files were uploaded.');
   }
-  catch (err){
-    return next("Invalid request")
-  }
-  return res.status(200).send({"token":result});
+
+  tmpFile = uploadDir + req.files.file.name
+  console.log(tmpFile)
+  req.files.file.mv(tmpFile, async function(err){
+      if (err) return res.status(500).send(err);
+      let stream = fs.createReadStream(tmpFile)
+      let result
+      try {
+        result = await db.addAnalysis(stream); //still await for errors
+      }
+      catch (err){
+        return next("Invalid request")
+      }
+      console.log(result)
+      return res.status(200).send({"token":result});
+  })
 });
 
 router.get('/status/', async (req, res, next) => {
