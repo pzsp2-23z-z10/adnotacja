@@ -1,10 +1,11 @@
 const axios = require('axios')
 
-async function requestCalculation(data){
+async function requestCalculation(fsteam){
+	// fsteam - ReadStream of file to send
 	let url =  "http://localhost:5000" ///process.env.usersURL
 
 	let target = url+'/api/calculateStuff'
-	return await axios.post(target).then((res)=>{
+	return await axios.post(target, fsteam).then((res)=>{
 		console.log("got response",res.data)
 		return res.data;
 	}).catch((error)=>{
