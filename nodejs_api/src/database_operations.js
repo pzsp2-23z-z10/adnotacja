@@ -29,7 +29,7 @@ async function getAnalysis(id){
 async function addAnalysis(data){
 
 	//@TODO check if valid
-	console.log("Starting analysis:",data)
+	console.log("Starting analysis:",data.path)
 
 	// here will be some concurrent action, request is scheduled and token is returned
 	outer_connections.requestCalculation(data)

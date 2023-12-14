@@ -28,7 +28,7 @@ router.post('/new', async (req, res, next) => {
   }
 
   tmpFile = uploadDir + req.files.file.name
-  console.log(tmpFile)
+  console.log(req.files.file)
   req.files.file.mv(tmpFile, async function(err){
       if (err) return res.status(500).send(err);
       let stream = fs.createReadStream(tmpFile)
