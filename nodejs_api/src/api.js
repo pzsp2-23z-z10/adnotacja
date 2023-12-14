@@ -27,8 +27,11 @@ router.post('/new', async (req, res, next) => {
     return res.status(400).send('No files were uploaded.');
   }
 
+  if (req.files.file===undefined){
+    req.files.file=req.files[Object.keys(req.files)[0]] //don't care about the param name
+  }
+
   tmpFile = uploadDir + req.files.file.name
-  console.log(tmpFile)
   req.files.file.mv(tmpFile, async function(err){
       if (err) return res.status(500).send(err);
       let stream = fs.createReadStream(tmpFile)
@@ -54,9 +57,16 @@ router.get('/status/:token', async (req, res, next) => {
   let token = req.params.token; //  #swagger.parameters['token'] = { description: 'analysis identifier, returned from `/new` endpoint', type:'string' }
 
   let result = await db.getAnalysis(token);
-  if (result.error)
-    return res.status(500).send();
-  return res.status(200).send(result);
+  if (result.error){
+    if (result.error=="Unknown token")
+      return res.status(404).send();
+    else
+      return res.status(500).send();
+  }
+  else if (result.status=="Not_ready")
+    return res.status(202).send(result);
+  else
+    return res.status(200).send(result);
 
 });
 
