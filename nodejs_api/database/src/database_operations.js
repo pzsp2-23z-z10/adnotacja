@@ -14,17 +14,15 @@ async function addGenotype(chr, pos, ref, alt, result) {
     gen.save();
 }
 
-async function addCalculationProgress(progressForTokens) {
-    let state = new CalculationProgress ({
-        progress : progressForTokens
-    });
+async function addCalculationProgress(progress) {
+    let state = new CalculationProgress (progress);
     console.log("Saving new calculation progress", state);
     state.save();
 }
 
-async function modifyCalculationProgress(progressForTokens) {
-    CalculationProgress.findOneAndUpdate({}, 
-        {$set:{progress: progressForTokens}}, {new:true}
+async function modifyCalculationProgress(token, newProgress) {
+    CalculationProgress.findOneAndUpdate({"token":token}, 
+        {$set:{progress: newProgress}}, {new:true}
     )
     .then(updatedRecord => {
         console.log("Successfully updated record", updatedRecord);

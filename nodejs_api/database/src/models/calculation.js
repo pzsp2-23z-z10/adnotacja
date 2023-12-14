@@ -1,6 +1,10 @@
 let mongoose = require('mongoose');
 
 let calculationProgressSchema = new mongoose.Schema({
+    token : {
+        type: String,
+        required: true
+    },
     progress : {
         type: mongoose.Schema.Types.Mixed
     } 
