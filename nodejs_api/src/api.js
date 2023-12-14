@@ -27,8 +27,11 @@ router.post('/new', async (req, res, next) => {
     return res.status(400).send('No files were uploaded.');
   }
 
+  if (req.files.file===undefined){
+    req.files.file=req.files[Object.keys(req.files)[0]] //don't care about the param name
+  }
+
   tmpFile = uploadDir + req.files.file.name
-  console.log(tmpFile)
   req.files.file.mv(tmpFile, async function(err){
       if (err) return res.status(500).send(err);
       let stream = fs.createReadStream(tmpFile)
