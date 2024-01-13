@@ -1,9 +1,9 @@
+---
 version: "3"
 services:
-  dummy-analysis_docker:
-    container_name: analysis1
+  algorithm_00:
+    container_name: algorithm00
     network_mode: "host"
     build:
-      context: docker
+      context: .
       dockerfile: Dockerfile
-
