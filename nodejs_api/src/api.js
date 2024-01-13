@@ -71,6 +71,7 @@ router.get('/status/:token', async (req, res, next) => {
 });
 
 
-app.listen(process.env.PORT, () =>
-  console.log(`API listening on port ${process.env.PORT}!`),
+app.listen(process.env.PORT, () => {
+  process.env.PORT??=1234
+  console.log(`API listening on port ${process.env.PORT}!`)},
 );
