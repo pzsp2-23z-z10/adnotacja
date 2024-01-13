@@ -1,10 +1,13 @@
 const express = require('express')
 const fs = require('fs')
 const fileUpload = require('express-fileupload');
-
-const db = require('./database_operations.js')
 const router = express.Router()
 const bodyParser = require("body-parser")
+
+const db = require('./database_operations.js');
+config = require('./config.js')
+db.initServices(config)
+
 
 app = express()
 app.use(express.json({limit: '10mb'}));
@@ -14,6 +17,7 @@ app.use(fileUpload());
 app.use('/analysis', router)
 
 const uploadDir = "/tmp/"
+
 router.post('/new', async (req, res, next) => {
 /*
   #swagger.description = 'Create new analysis request'
@@ -37,6 +41,10 @@ router.post('/new', async (req, res, next) => {
       let stream = fs.createReadStream(tmpFile)
       let result
       try {
+        console.log("Starting analysis:",data.path)
+        const token = Math.floor(new Date().getTime() / 1000)
+
+        let result = outer_connections.requestCalculation(data)
         result = await db.addAnalysis(stream); //still await for errors
       }
       catch (err){
@@ -71,7 +79,6 @@ router.get('/status/:token', async (req, res, next) => {
 });
 
 
-app.listen(process.env.PORT, () => {
-  process.env.PORT??=1234
+app.listen(process.env.PORT??=1234, () => {
   console.log(`API listening on port ${process.env.PORT}!`)},
 );

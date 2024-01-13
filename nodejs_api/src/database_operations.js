@@ -2,7 +2,23 @@ const mongoose = require('mongoose');
 const outer_connections = require('./outer_connections.js')
 
 const { Genotype } = require('./models/genotype.js');
-const { CalculationProgress } = require('./models/calculation.js');
+const { CalculationProgress,ServiceStatus } = require('./models/calculation.js');
+
+
+async function initServices(services){
+  console.log("Initialising db")
+  // creates entries for each service
+  for (const [name, value] of Object.entries(services)){
+    let service = await ServiceStatus.exists({ service_id: name })
+    //console.log(name+" exists? : "+service)
+    if (!service){
+      console.log("Adding new service to databse: "+name)
+      let a = new ServiceStatus({service_id:name,active_token:"token"})
+      a.save();
+    }
+  
+  }
+}
 
 async function getAnalysis(id){
 	
@@ -42,19 +58,7 @@ async function getAnalysis(id){
 }
 
 async function addAnalysis(data){
-
-	//@TODO check if valid
-	console.log("Starting analysis:",data.path)
-
-	// here will be some concurrent action, request is scheduled and token is returned
-	outer_connections.requestCalculation(data)
-	const token = Math.floor(new Date().getTime() / 1000)
 	addCalculationProgress({"token":token,progress:[false]});
-	setTimeout(()=> {
-		//symulacja tego, że dane są gotowe
-		modifyCalculationProgress(token,[true]);
-		console.log("!!! Analysis done for token",token)
-	}, 10000);
 	return token;
 }
 
@@ -93,4 +97,4 @@ async function modifyCalculationProgress(token, newProgress) {
 }
 
 
-module.exports = {getAnalysis, addAnalysis, addGenotype, addCalculationProgress,modifyCalculationProgress, getCalculationProgress}
+module.exports = {initServices, getAnalysis, addAnalysis, addGenotype, addCalculationProgress,modifyCalculationProgress, getCalculationProgress}
