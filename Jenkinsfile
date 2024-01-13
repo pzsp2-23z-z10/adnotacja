@@ -2,13 +2,26 @@ pipeline {
     agent any
     environment {
         DOCKERHUB_CREDS = credentials('dockerhub-creds')
-        DOCKERFILE_PATH = './dummy_docker/docker'
-        CONTAINER_NAME = 'dummy_docker'
+        ALGORITHMS_DIR = 'algorithms'
+        ALGORITHM_CONTAINER_PREFIX = 'adnotacja-algorytm-'
     }
     stages {
-        stage('build') {
+        stage('build-algorithms') {
             steps {
-                sh 'docker build -t $DOCKERHUB_CREDS_USR/$CONTAINER_NAME $DOCKERFILE_PATH'
+                dir("$env.WORKSPACE/$env.ALGORITHMS_DIR"){
+                    script {
+                            def buildCommand = "docker build . -t $env.DOCKERHUB_CREDS_USR/"
+
+                            def subDirs = findFiles().findAll { file -> file.directory }
+                            subDirs.each { subDir ->
+                                println "Building container for algorithm: $subDir.name"
+                                def process = "$buildCommand/$subDir.name".execute()
+                                process.waitFor()
+                                println "${process.text}"
+                                println "Successfully built containter: $subDir.name"
+                            }
+                    }
+                }
             }
         }
         stage('test') {
