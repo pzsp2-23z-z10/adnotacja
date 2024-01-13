@@ -1,0 +1,9 @@
+---
+version: "3"
+services:
+  algorithm_01:
+    container_name: algorithm01
+    network_mode: "host"
+    build:
+      context: .
+      dockerfile: Dockerfile
