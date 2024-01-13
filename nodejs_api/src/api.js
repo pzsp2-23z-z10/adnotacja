@@ -5,6 +5,8 @@ const router = express.Router()
 const bodyParser = require("body-parser")
 
 const db = require('./database_operations.js');
+const outer_connections = require('./outer_connections.js')
+const queue = require('./queue.js')
 config = require('./config.js')
 db.initServices(config)
 
@@ -78,7 +80,28 @@ router.get('/status/:token', async (req, res, next) => {
 
 });
 
+async function checkQueues(){
+  for (const [name, value] of Object.entries(config)){
+    console.debug("Periodic queue check")
+    if (!queue.isQueueEmpty(name)){
+      let status = await outer_connections.askForStatus(value['address'],queue.peek(name))
+      if (status['done']==true){
+        console.log("done")
+        let token = queue.pop(name); //remove from queue
+        let progress = db.getCalculationProgress(token)
+        progress[name]=true
+        db.modifyCalculationProgress(token,progress)
+      }
+    }
+}
+}
+
 
 app.listen(process.env.PORT??=1234, () => {
-  console.log(`API listening on port ${process.env.PORT}!`)},
-);
+  console.log(`API listening on port ${process.env.PORT}!`)
+
+  queue.createQueues(config);
+  setInterval(checkQueues,5000);
+  queue.push(Object.keys(config)[0],"token123")
+
+});

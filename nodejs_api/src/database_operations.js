@@ -89,7 +89,13 @@ async function modifyCalculationProgress(token, newProgress) {
         {$set:{progress: newProgress}}, {new:true}
     )
     .then(updatedRecord => {
-        console.log("Successfully updated record", updatedRecord);
+        if (updatedRecord==null){
+          console.error("calculation progress for "+token+" not found!")
+        }
+        else{
+          console.log("Successfully updated record", updatedRecord);
+
+        }
     })
     .catch(err=>{
         console.error(err);
