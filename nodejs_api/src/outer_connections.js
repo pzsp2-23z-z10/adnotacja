@@ -1,16 +1,16 @@
 const axios = require('axios')
 
-async function requestCalculation(fstream){
+async function requestCalculation(fstream, serviceAddress, port=5000){
 	// fsteam - ReadStream of file to send
-	let url =  "http://localhost:5000" ///process.env.usersURL
+	// serviceAddress - address of something that will perform calculations
 
-	let target = url+'/api/calculateStuff'
+	let target = "http://"+serviceUrl+port+'/api/calculateStuff'
 	return await axios.post(target, fstream).then((res)=>{
 		console.log("got response",res.data)
 		return res.data;
 	}).catch((error)=>{
 		if (error.code=="ECONNREFUSED")
-			console.log("Unable to connect to docker");
+			console.log("Unable to connect to "+serviceAddress);
 		return {"error":error.code}
 	})
 }
