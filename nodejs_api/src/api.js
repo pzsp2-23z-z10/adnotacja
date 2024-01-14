@@ -42,6 +42,7 @@ router.post('/new', async (req, res, next) => {
       if (err) return res.status(500).send(err);
       let stream = fs.createReadStream(tmpFile)
       try {
+        result = await db.makeAnalysis(stream); //still await for errors
         console.log("Starting analysis:",stream.path)
         var token = Math.floor(new Date().getTime() / 1000)
         
