@@ -21,6 +21,13 @@ function peek(service_name){
     return queues[service_name][0]
 }
 
+function pushAll(el){
+    // push to all queues
+    for (const [name, value] of Object.entries(queues)){
+        queues[name].push(el)
+    }
+}
+
 function push(service_name, el){
     return queues[service_name].push(el)
 }
@@ -30,4 +37,4 @@ function pop(service_name){
 }
 
 
-module.exports = {createQueues, isQueueEmpty, peek, push, pop}
+module.exports = {createQueues, isQueueEmpty, peek, pushAll, push, pop}
