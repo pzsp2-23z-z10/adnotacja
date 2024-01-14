@@ -3,8 +3,8 @@ from flask import request as rq, session, url_for
 from configure import PORT, HOST, BACKEND_LINK, ANALYSIS
 import requests
 from datetime import timedelta
-import parse_data
-import vcf
+# import parse_data
+# import vcf
 
 
 app = Flask(__name__)
