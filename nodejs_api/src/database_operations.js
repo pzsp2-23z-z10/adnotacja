@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const outer_connections = require('./outer_connections.js')
 
 const { Genotype } = require('./models/genotype.js');
-const { CalculationProgress,ServiceStatus } = require('./models/calculation.js');
+const { getEmptyProgress,CalculationProgress,ServiceStatus } = require('./models/calculation.js');
 
 
 async function initServices(services){
@@ -20,6 +20,18 @@ async function initServices(services){
   }
 }
 
+async function isServiceBusy(name){
+  let service = await ServiceStatus.findOne({ service_id: name })
+  return service.active_token!=undefined;
+}
+
+async function setServiceStatus(name, status){
+  // if status==undefined, then service is free
+  let service = await ServiceStatus.findOne({ service_id: name })
+  service.active_token=status;
+
+}
+
 async function getAnalysis(id){
 	
 	console.log("Somebody asked for analysis id:",id)
@@ -30,7 +42,7 @@ async function getAnalysis(id){
 		console.log("this token is not in database.")
 		return {error:"Unknown token"}
 	}
-	else if (progress.progress[0]==false)
+	else if (Object.values(progress.progress).includes(false))
 	{
 		console.log("Analysis is not finished.")
 		return {status:"Not_ready"}
@@ -57,9 +69,8 @@ async function getAnalysis(id){
 }
 }
 
-async function addAnalysis(data){
-	addCalculationProgress({"token":token,progress:[false]});
-	return token;
+async function addAnalysis(token, services){
+	addCalculationProgress({"token":token,progress:getEmptyProgress(services)});
 }
 
 async function addGenotype(chr, pos, ref, alt, result) {
@@ -103,4 +114,4 @@ async function modifyCalculationProgress(token, newProgress) {
 }
 
 
-module.exports = {initServices, getAnalysis, addAnalysis, addGenotype, addCalculationProgress,modifyCalculationProgress, getCalculationProgress}
+module.exports = {setServiceStatus, isServiceBusy,initServices, getAnalysis, addAnalysis, addGenotype, addCalculationProgress,modifyCalculationProgress, getCalculationProgress}
