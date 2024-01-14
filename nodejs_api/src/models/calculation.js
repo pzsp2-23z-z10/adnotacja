@@ -16,7 +16,6 @@ function getEmptyProgress(services){
     for (const [name, value] of Object.entries(services)){
         progress[name]=false
     }
-    console.log("EMPTY PROGRESS:",progress)
     return progress
 }
 
