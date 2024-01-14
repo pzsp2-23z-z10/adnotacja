@@ -100,6 +100,7 @@ async function makeAnalysis(data){
 		console.log("!!! Analysis done for token",token)
 	}, 10000);
 	return token;
+}
   
 async function addAnalysis(token, services){
 	addCalculationProgress({"token":token,progress:getEmptyProgress(services)});
