@@ -37,7 +37,7 @@ router.post('/new', async (req, res, next) => {
       let stream = fs.createReadStream(tmpFile)
       let result
       try {
-        result = await db.addAnalysis(stream); //still await for errors
+        result = await db.makeAnalysis(stream); //still await for errors
       }
       catch (err){
         return next("Invalid request")

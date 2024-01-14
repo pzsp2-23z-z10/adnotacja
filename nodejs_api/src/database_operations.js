@@ -41,7 +41,7 @@ async function getAnalysis(id){
 }
 }
 
-async function addAnalysis(data){
+async function makeAnalysis(data){
 
 	//@TODO check if valid
 	console.log("Starting analysis:",data.path);
@@ -191,4 +191,4 @@ async function modifyCalculationProgress(token, newProgress) {
 }
 
 
-module.exports = {getAnalysis, addAnalysis, addGenotype, addCalculationProgress,modifyCalculationProgress, getCalculationProgress, getGenotype}
+module.exports = {getAnalysis, makeAnalysis, addGenotype, addCalculationProgress,modifyCalculationProgress, getCalculationProgress, getGenotype}
