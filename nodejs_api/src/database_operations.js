@@ -2,7 +2,35 @@ const mongoose = require('mongoose');
 const outer_connections = require('./outer_connections.js')
 
 const { Genotype } = require('./models/genotype.js');
-const { CalculationProgress } = require('./models/calculation.js');
+const { getEmptyProgress,CalculationProgress,ServiceStatus } = require('./models/calculation.js');
+
+
+async function initServices(services){
+  console.log("Initialising db")
+  // creates entries for each service
+  for (const [name, value] of Object.entries(services)){
+    let service = await ServiceStatus.exists({ service_id: name })
+    //console.log(name+" exists? : "+service)
+    if (!service){
+      console.log("Adding new service to databse: "+name)
+      let a = new ServiceStatus({service_id:name,active_token:"token"})
+      a.save();
+    }
+  
+  }
+}
+
+async function isServiceBusy(name){
+  let service = await ServiceStatus.findOne({ service_id: name })
+  return service.active_token!=undefined;
+}
+
+async function setServiceStatus(name, status){
+  // if status==undefined, then service is free
+  let service = await ServiceStatus.findOne({ service_id: name })
+  service.active_token=status;
+
+}
 
 async function getAnalysis(id){
 	
@@ -14,7 +42,7 @@ async function getAnalysis(id){
 		console.log("this token is not in database.")
 		return {error:"Unknown token"}
 	}
-	else if (progress.progress[0]==false)
+	else if (Object.values(progress.progress).includes(false))
 	{
 		console.log("Analysis is not finished.")
 		return {status:"Not_ready"}
@@ -72,6 +100,9 @@ async function makeAnalysis(data){
 		console.log("!!! Analysis done for token",token)
 	}, 10000);
 	return token;
+  
+async function addAnalysis(token, services){
+	addCalculationProgress({"token":token,progress:getEmptyProgress(services)});
 }
 
 function parseStreamByLines(data) {
@@ -183,7 +214,13 @@ async function modifyCalculationProgress(token, newProgress) {
         {$set:{progress: newProgress}}, {new:true}
     )
     .then(updatedRecord => {
-        console.log("Successfully updated record", updatedRecord);
+        if (updatedRecord==null){
+          console.error("calculation progress for "+token+" not found!")
+        }
+        else{
+          console.log("Successfully updated record", updatedRecord);
+
+        }
     })
     .catch(err=>{
         console.error(err);
@@ -191,4 +228,5 @@ async function modifyCalculationProgress(token, newProgress) {
 }
 
 
-module.exports = {getAnalysis, makeAnalysis, addGenotype, addCalculationProgress,modifyCalculationProgress, getCalculationProgress, getGenotype}
+
+module.exports = {setServiceStatus, isServiceBusy,initServices,getAnalysis, makeAnalysis, addGenotype, addCalculationProgress,modifyCalculationProgress, getCalculationProgress, getGenotype}
