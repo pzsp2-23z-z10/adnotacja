@@ -5,5 +5,5 @@ services:
     container_name: algorithm01
     network_mode: "host"
     build:
-      context: .
+      context: ./containers/00_container1
       dockerfile: Dockerfile

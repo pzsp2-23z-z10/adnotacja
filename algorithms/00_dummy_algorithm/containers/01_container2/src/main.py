@@ -10,10 +10,10 @@ app = Flask(__name__)
 @app.route(API_PREFIX + "calculateStuff", methods=["POST"])
 def calculateStuff():
     #record = json.loads(request.data)
-    return jsonify({"id":321,
+    return jsonify({"id":123,
   "Wyniki":[
     {"name":"SPiP","result":[{
-      "CHROM": "chr2",
+      "CHROM": "chr1",
       "POS": 15765825,
       "ID": "NM_007272:g.15765825:G>A",
       "REF": "G",
