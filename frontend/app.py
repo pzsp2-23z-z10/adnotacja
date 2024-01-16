@@ -1,11 +1,11 @@
 from flask import Flask, render_template, redirect
 from flask import request as rq, session, url_for
-from configure import PORT, HOST, BACKEND_LINK, ANALYSIS
+from configure import BACKEND_LINK, ANALYSIS
 import requests
-import vcf
 
 
 app = Flask(__name__)
+app.secret_key = "PZSP2-z10"
 
 
 def requires_token(view_func):
@@ -28,9 +28,10 @@ def add():
         return render_template('upload.html')
     elif rq.method == 'POST':
         file = rq.files['file']
+        selected_alg = {"alg": rq.form.getlist('alg')}
         try:
             link = f"{BACKEND_LINK}/analysis/new"
-            res = requests.post(link, files={'file': (file.filename, file)}, timeout=45)
+            res = requests.post(link, files={'file': (file.filename, file)}, data=selected_alg, timeout=60)
             token = res.json()['token']
             return redirect(url_for('uploaded', token=token))
         except Exception:
@@ -80,7 +81,3 @@ def status(token):
 def token_input():
     data = rq.args.get('data', None)
     return render_template("token_input.html", data=data)
-
-
-if __name__ == "__main__":
-    app.run(host=HOST, port=PORT)

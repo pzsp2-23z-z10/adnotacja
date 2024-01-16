@@ -6,6 +6,18 @@
     <form action="/analysis/add" method="post" enctype="multipart/form-data">
         <input type="file" id="file" name="file" accept=".tsv, .vcf">
         <br>
-        <input type="submit" value="Wyślij">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="1" id="flexCheckDefault" name="alg">
+            <label class="form-check-label" for="flexCheckDefault">
+                Alg1
+            </label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="2" id="flexCheckChecked" name="alg">
+            <label class="form-check-label" for="flexCheckChecked">
+                Alg2
+            </label>
+        </div>
+        <button type="submit">Submit</button>
     </form>
 {% endblock %}
