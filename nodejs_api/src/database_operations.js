@@ -2,7 +2,42 @@ const mongoose = require('mongoose');
 const outer_connections = require('./outer_connections.js')
 
 const { Genotype } = require('./models/genotype.js');
-const { CalculationProgress } = require('./models/calculation.js');
+const { getEmptyProgress,CalculationProgress,ServiceStatus } = require('./models/calculation.js');
+
+
+async function initServices(services){
+  console.log("Initialising db")
+  // creates entries for each service
+  for (const [name, value] of Object.entries(services)){
+    let service = await ServiceStatus.exists({ service_id: name })
+    //console.log(name+" exists? : "+service)
+    if (!service){
+      console.log("Adding new service to databse: "+name)
+      let a = new ServiceStatus({service_id:name,active_token:undefined})
+      a.save();
+    }
+    else{
+      //!!!!!!! THIS CLEARS STATUES ON RESTART, MAYBE NOT GOOD !!!!!!
+      console.log("Clearing services' statuses")
+      await ServiceStatus.findOneAndUpdate({ service_id: name }, {$set:{active_token:null}})
+    }
+  
+  }
+}
+
+async function isServiceBusy(name){
+  console.log("isb")
+  let service = await ServiceStatus.findOne({ service_id: name })
+  console.log("service '",name,"' status:",service)
+  console.log("busy?",service.active_token!=null)
+  return service.active_token!=null;
+}
+
+async function setServiceStatus(name, status){
+  console.log("set service",name,"to status",status==undefined?"free":status+" (busy)")
+  // if status==undefined, then service is free
+  let service = await ServiceStatus.findOneAndUpdate({ service_id: name }, {$set:{active_token:status}})
+}
 
 async function getAnalysis(id){
 	
@@ -14,7 +49,7 @@ async function getAnalysis(id){
 		console.log("this token is not in database.")
 		return {error:"Unknown token"}
 	}
-	else if (progress.progress[0]==false)
+	else if (Object.values(progress.progress).includes(false))
 	{
 		console.log("Analysis is not finished.")
 		return {status:"Not_ready"}
@@ -40,24 +75,44 @@ async function getAnalysis(id){
   ]
 }
 }
-
-async function addAnalysis(data){
-
-	//@TODO check if valid
-	console.log("Starting analysis:",data.path)
-
-	// here will be some concurrent action, request is scheduled and token is returned
-	outer_connections.requestCalculation(data)
-	const token = Math.floor(new Date().getTime() / 1000)
-	addCalculationProgress({"token":token,progress:[false]});
-	setTimeout(()=> {
-		//symulacja tego, że dane są gotowe
-		modifyCalculationProgress(token,[true]);
-		console.log("!!! Analysis done for token",token)
-	}, 10000);
-	return token;
+  
+async function addAnalysis(token, services){
+	addCalculationProgress({"token":token,progress:getEmptyProgress(services)});
 }
 
+async function findLinesInDb(lines, column_positions) {
+  console.log("find in db:",lines,column_positions)
+  var have_results = [];
+  var no_results = [];
+
+  var promises = lines.map(async function (line) {
+    if (line[0] != '#') {
+      var elements = line.split(/[\s\t,]+/);
+      var values = [elements[column_positions[0]], elements[column_positions[1]], elements[column_positions[2]], elements[column_positions[3]]];
+
+      var genotype = await getGenotype(values[0], values[1], values[2], values[3]);
+
+      if (genotype.length != 0) {
+        console.log("Found in db: " + line);
+        var all_results = '';
+        for (let i = 0; i < genotype.length; i++) {
+          genotype[i].result.forEach((nestedItem) => {
+            all_results += nestedItem.name + " " + nestedItem.value + " "
+          });
+        }
+        console.log('All results ');
+        console.log(all_results)
+        have_results.push(line + all_results);
+      } else {
+        no_results.push(line);
+      }
+    }
+  });
+
+  await Promise.all(promises);
+
+  return { have_results, no_results };
+}
 async function addGenotype(chr, pos, ref, alt, result) {
     let gen = new Genotype({
         chr : chr,
@@ -70,6 +125,9 @@ async function addGenotype(chr, pos, ref, alt, result) {
     gen.save();
 }
 
+async function getGenotype(chr, pos, ref, alt) {
+  return Genotype.find({$and:[{"chr":chr}, {"pos":pos}, {"ref":ref}, {"alt":alt}]})
+}
 async function addCalculationProgress(progress) {
     let state = new CalculationProgress (progress);
     console.log("Saving new calculation progress", state);
@@ -85,12 +143,17 @@ async function modifyCalculationProgress(token, newProgress) {
         {$set:{progress: newProgress}}, {new:true}
     )
     .then(updatedRecord => {
-        console.log("Successfully updated record", updatedRecord);
+        if (updatedRecord==null){
+          console.error("calculation progress for "+token+" not found!")
+        }
+        else{
+          console.log("Successfully updated record", updatedRecord);
+
+        }
     })
     .catch(err=>{
         console.error(err);
     })
 }
 
-
-module.exports = {getAnalysis, addAnalysis, addGenotype, addCalculationProgress,modifyCalculationProgress, getCalculationProgress}
+module.exports = {findLinesInDb, setServiceStatus, isServiceBusy,initServices,getAnalysis, addAnalysis, addGenotype, addCalculationProgress,modifyCalculationProgress, getCalculationProgress, getGenotype}

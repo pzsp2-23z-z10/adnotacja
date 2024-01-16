@@ -1,0 +1,4 @@
+services:
+  pangolin5:
+    address: "localhost"
+    port: 5050
