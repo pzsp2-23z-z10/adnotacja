@@ -28,7 +28,7 @@ let serviceStatusSchema = new mongoose.Schema({
     },
     active_token : {
         type: String,
-        required: true
+        //required: true
     } 
 });
 
