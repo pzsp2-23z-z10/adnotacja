@@ -2,14 +2,10 @@ from flask import Flask, render_template, redirect
 from flask import request as rq, session, url_for
 from configure import PORT, HOST, BACKEND_LINK, ANALYSIS
 import requests
-from datetime import timedelta
-import parse_data
 import vcf
 
 
 app = Flask(__name__)
-app.secret_key = 'Bruhuhuhuhu64'
-app.permanent_session_lifetime = timedelta(seconds=60)
 
 
 def requires_token(view_func):
@@ -34,7 +30,8 @@ def add():
         file = rq.files['file']
         try:
             link = f"{BACKEND_LINK}/analysis/new"
-            token = requests.post(link, files={'file': (file.filename, file)}).json()['token']
+            res = requests.post(link, files={'file': (file.filename, file)}, timeout=45)
+            token = res.json()['token']
             return redirect(url_for('uploaded', token=token))
         except Exception:
             session['err'] = 'Zły format danych lub mogły zostać uszkodzone'
@@ -57,7 +54,11 @@ def error():
 @app.route(f'/{ANALYSIS}/status', methods=['GET'])
 @requires_token
 def status(token):
-    res = requests.get(f'{BACKEND_LINK}/analysis/status/{token}')
+    try:
+        res = requests.get(f'{BACKEND_LINK}/analysis/status/{token}', timeout=60)
+    except TimeoutError:
+        session["err"] = "Nie można się połączyć z serwerem."
+        return redirect(url_for("error"))
     if res.status_code == 200:
         try:
             data = res.json()
@@ -67,9 +68,9 @@ def status(token):
         if isinstance(data, dict):
             data = data["Wyniki"]
         return render_template('status.html', data=data)
-    elif res.status_code == 202:
+    if res.status_code == 202:
         return render_template("notyet.html")
-    elif res.status_code == 404:
+    if res.status_code == 404:
         session['mes'] = "Zły token. Sprawdź czy na pewno podałeś poprawny token."
         return redirect(url_for("error"))
     return redirect(url_for("error"))
