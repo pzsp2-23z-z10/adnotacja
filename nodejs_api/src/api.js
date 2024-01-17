@@ -38,6 +38,8 @@ router.post('/new', async (req, res, next) => {
     req.files.file=req.files[Object.keys(req.files)[0]] //don't care about the param name
   }
 
+  // console.log(req.body.alg);  lista wybranych algorytmów np: [ 'pangolin5', 'SPiP' ]
+
   var token = Math.floor(new Date().getTime() / 1000)
   tmpFile = uploadDir + token
   req.files.file.mv(tmpFile, async function(err){
@@ -81,6 +83,11 @@ router.get('/status/:token', async (req, res, next) => {
   else
     return res.status(200).send(result);
 
+});
+
+router.get('/algorithms', async (req, res, next) => {
+  const service_names = Object.keys(config);
+  return res.status(200).send(service_names);
 });
 
 async function checkQueues(){
