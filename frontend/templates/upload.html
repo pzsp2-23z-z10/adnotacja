@@ -6,18 +6,17 @@
     <form action="/analysis/add" method="post" enctype="multipart/form-data">
         <input type="file" id="file" name="file" accept=".tsv, .vcf">
         <br>
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="1" id="flexCheckDefault" name="alg">
-            <label class="form-check-label" for="flexCheckDefault">
-                Alg1
-            </label>
+        <div id="algs-container">
+            {% for alg in algs %}
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" value="{{ alg }}" id="flexCheckDefault{{ alg }}" name="alg">
+                    <label class="form-check-label" for="flexCheckDefault{{ alg }}"">
+                        {{alg}}
+                    </label>
+                </div>
+            {% endfor %}
         </div>
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="2" id="flexCheckChecked" name="alg">
-            <label class="form-check-label" for="flexCheckChecked">
-                Alg2
-            </label>
-        </div>
-        <button type="submit">Submit</button>
+        <button type="submit" onclick="validateForm()">Wyślij</button>
     </form>
+    <script src="{{ url_for('static', filename='validate.js') }}"></script>
 {% endblock %}

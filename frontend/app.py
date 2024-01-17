@@ -25,13 +25,20 @@ def index():
 @app.route(f'/{ANALYSIS}/add', methods=['GET', 'POST'])
 def add():
     if rq.method == 'GET':
-        return render_template('upload.html')
-    elif rq.method == 'POST':
+        link = f"{BACKEND_LINK}/analysis/algorithms"
+        try:
+            algs = requests.get(link, timeout=60).json()
+        except Exception:
+            algs = []
+        return render_template('upload.html', algs=algs)
+    if rq.method == 'POST':
         file = rq.files['file']
-        selected_alg = {"alg": rq.form.getlist('alg')}
+        algs = rq.form.getlist('alg')
+        selected_alg = {"alg": algs}
         try:
             link = f"{BACKEND_LINK}/analysis/new"
-            res = requests.post(link, files={'file': (file.filename, file)}, data=selected_alg, timeout=60)
+            res = requests.post(link, files={'file': (file.filename, file)},
+                                data=selected_alg, timeout=60)
             token = res.json()['token']
             return redirect(url_for('uploaded', token=token))
         except Exception:
