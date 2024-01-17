@@ -17,30 +17,30 @@ pipeline {
             steps {
                 dir("$env.WORKSPACE/$env.ALGORITHMS_DIR"){
                     script {
-                            def buildCommand = "docker build . -t "
+                        def buildCommand = "docker build . -t "
 
-                            def algorithmContainersCreated = []
+                        def algorithmContainersCreated = []
 
-                            def subDirs = findFiles().findAll { file -> file.directory }
-                            subDirs.each { subDir ->
-                                def algorithmNumber = "$subDir.name".split("$env.ALGORITHM_NAME_DELIMITER")[0]
-                                dir("$subDir.name/$env.ALGORITHM_CONTAINERS_DIR") {
-                                    def containers = findFiles().findAll { file -> file.directory }
-                                    containers.each { container ->
-                                        def containerNumber = "$container.name".split("$env.ALGORITHM_NAME_DELIMITER")[0]
-                                        def containerName = "$env.ALGORITHM_CONTAINER_PREFIX-$algorithmNumber-$containerNumber"
-                                        def dockerhubName = "$env.DOCKERHUB_CREDS_USR/$containerName"
-                                        dir("$container") {
-                                            println "Building container for algorithm: $containerName"
-                                            def process = "$buildCommand $dockerhubName".execute()
-                                            process.waitFor()
-                                            println "${process.text}"
-                                            algorithmContainersCreated.add("$dockerhubName")
-                                            println "Successfully built containter: $containerName"
-                                        }
+                        def subDirs = findFiles().findAll { file -> file.directory }
+                        subDirs.each { subDir ->
+                            def algorithmNumber = "$subDir.name".split("$env.ALGORITHM_NAME_DELIMITER")[0]
+                            dir("$subDir.name/$env.ALGORITHM_CONTAINERS_DIR") {
+                                def containers = findFiles().findAll { file -> file.directory }
+                                containers.each { container ->
+                                    def containerNumber = "$container.name".split("$env.ALGORITHM_NAME_DELIMITER")[0]
+                                    def containerName = "$env.ALGORITHM_CONTAINER_PREFIX-$algorithmNumber-$containerNumber"
+                                    def dockerhubName = "$env.DOCKERHUB_CREDS_USR/$containerName"
+                                    dir("$container") {
+                                        println "Building container for algorithm: $containerName"
+                                        def process = "$buildCommand $dockerhubName".execute()
+                                        process.waitFor()
+                                        println "${process.text}"
+                                        algorithmContainersCreated.add("$dockerhubName")
+                                        println "Successfully built containter: $containerName"
                                     }
                                 }
                             }
+                        }
                         env.ALGORITHM_CONTAINERS_CREATED = algorithmContainersCreated
                     }
                 }
