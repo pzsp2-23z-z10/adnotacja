@@ -65,9 +65,10 @@ pipeline {
         stage('push') {
             steps {
                 script {
+                        def tag = "test"
                         login_to_dockerhub()
                         def containers = get_containers_created()
-                        push_containers(containers)
+                        push_containers(containers, tag)
                 }
             }
         }
@@ -105,9 +106,10 @@ def login_to_dockerhub() {
     sh(returnStdout: true, script: "echo $DOCKERHUB_CREDS_PSW | docker login -u $DOCKERHUB_CREDS_USR --password-stdin")
 }
 
-def push_containers(containers) {
+def push_containers(containers, tag) {
     containers.each { container ->
-        sh(returnStdout:true, script: "docker push $container")
+        sh(returnStdout:true, script: "docker tag $container $container:$tag")
+        sh(returnStdout:true, script: "docker push $container:$tag")
         println "Successfully pushed container: $container"
     }
 }
