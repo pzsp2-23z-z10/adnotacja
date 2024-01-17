@@ -17,26 +17,18 @@ pipeline {
             steps {
                 dir("$env.WORKSPACE/$env.ALGORITHMS_DIR"){
                     script {
-                        def buildCommand = "docker build . -t "
                         def algorithmContainersCreated = []
 
                         def subDirs = get_sub_dirs()
                         subDirs.each { subDir ->
-                            def algorithmNumber = "$subDir.name".split("$env.ALGORITHM_NAME_DELIMITER")[0]
+                            def algorithmNumber = get_algorithm_number(subDir)
                             dir("$subDir.name/$env.ALGORITHM_CONTAINERS_DIR") {
                                 def containers = get_sub_dirs()
                                 containers.each { container ->
-                                    def containerNumber = "$container.name".split("$env.ALGORITHM_NAME_DELIMITER")[0]
-                                    def containerName = "$env.ALGORITHM_CONTAINER_PREFIX-$algorithmNumber-$containerNumber"
-                                    def dockerhubName = "$env.DOCKERHUB_CREDS_USR/$containerName"
+                                    def dockerhubName = generate_container_name(algorithmNumber, container)
                                     dir("$container") {
-                                        println "Building container for algorithm: $containerName"
-                                        def process = "$buildCommand $dockerhubName".execute()
-                                        process.waitFor()
-                                        println "${process.text}"
-                                        // def algorithm = docker.build("$dockerhubName")
+                                        build_container(dockerhubName)
                                         algorithmContainersCreated.add("$dockerhubName")
-                                        println "Successfully built containter: $containerName"
                                     }
                                 }
                             }
@@ -73,12 +65,9 @@ pipeline {
         stage('push') {
             steps {
                 script {
-                        sh(returnStdout: true, script: "echo $DOCKERHUB_CREDS_PSW | docker login -u $DOCKERHUB_CREDS_USR --password-stdin")
-                        def containers = "$env.ALGORITHM_CONTAINERS_CREATED".tokenize(', []')
-                        containers.each { container ->
-                            sh(returnStdout:true, script: "docker push $container")
-                            println "Successfully pushed container: $container"
-                        }
+                        login_to_dockerhub()
+                        def containers = get_containers_created()
+                        push_containers(containers)
                 }
             }
         }
@@ -91,6 +80,34 @@ pipeline {
 }
 
 def get_sub_dirs() {
-    def subDirs = findFiles().findAll { file -> file.directory }
-    return subDirs
+    return findFiles().findAll { file -> file.directory }
+}
+
+def get_algorithm_number(subDir) {
+    return "$subDir.name".split("$env.ALGORITHM_NAME_DELIMITER")[0]
+}
+
+def generate_container_name(algorithmNumber, container) {
+    def containerNumber = "$container.name".split("$env.ALGORITHM_NAME_DELIMITER")[0]
+    def containerName = "$env.ALGORITHM_CONTAINER_PREFIX-$algorithmNumber-$containerNumber"
+    return "$env.DOCKERHUB_CREDS_USR/$containerName"
+}
+
+def build_container(dockerhubName) {
+    sh(returnStdout: true, script: "docker build . -t $dockerhubName")
+}
+
+def get_containers_created() {
+    return "$env.ALGORITHM_CONTAINERS_CREATED".tokenize(', []')
+}
+
+def login_to_dockerhub() {
+    sh(returnStdout: true, script: "echo $DOCKERHUB_CREDS_PSW | docker login -u $DOCKERHUB_CREDS_USR --password-stdin")
+}
+
+def push_containers(containers) {
+    containers.each { container ->
+        sh(returnStdout:true, script: "docker push $container")
+        println "Successfully pushed container: $container"
+    }
 }
