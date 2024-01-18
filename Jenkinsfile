@@ -6,7 +6,7 @@ pipeline {
         // the folder in which api files can be found
         API_DIR = 'nodejs_api'
         // API container name
-        API_CONTAINER_NAME = 'andotacja-api'
+        API_CONTAINER_NAME = 'adnotacja-api'
         // prefix for all containers with analysis algorithms
         ALGORITHM_CONTAINER_PREFIX = 'adnotacja-algorytm'
         // the folder in which algorithms can be found
