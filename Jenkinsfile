@@ -3,6 +3,10 @@ pipeline {
     environment {
         // credentials used to push images to dockerhub
         DOCKERHUB_CREDS = credentials('dockerhub-creds')
+        // the folder in which api files can be found
+        API_DIR = 'nodejs_api'
+        // API container name
+        API_CONTAINER_NAME = 'andotacja-api'
         // prefix for all containers with analysis algorithms
         ALGORITHM_CONTAINER_PREFIX = 'adnotacja-algorytm'
         // the folder in which algorithms can be found
@@ -13,11 +17,26 @@ pipeline {
         ALGORITHM_NAME_DELIMITER = '_'
     }
     stages {
+        stage('build-api') {
+            steps {
+                dir("$env.WORKSPACE/$env.API_DIR") {
+                    script {
+                        def apiContainerName = "$env.DOCKERHUB_CREDS_USR/$env.API_CONTAINER_NAME"
+
+                        def containersCreated = []
+                        build_container(apiContainerName)
+                        containersCreated.add("$apiContainerName")
+
+                        env.CONTAINERS_CREATED = containersCreated
+                    }
+                }
+            }
+        }
         stage('build-algorithms') {
             steps {
                 dir("$env.WORKSPACE/$env.ALGORITHMS_DIR"){
                     script {
-                        def algorithmContainersCreated = []
+                        def containersCreated = get_containers_created()
 
                         def subDirs = get_sub_dirs()
                         subDirs.each { subDir ->
@@ -28,12 +47,12 @@ pipeline {
                                     def dockerhubName = generate_container_name(algorithmNumber, container)
                                     dir("$container") {
                                         build_container(dockerhubName)
-                                        algorithmContainersCreated.add("$dockerhubName")
+                                        containersCreated.add("$dockerhubName")
                                     }
                                 }
                             }
                         }
-                        env.ALGORITHM_CONTAINERS_CREATED = algorithmContainersCreated
+                        env.CONTAINERS_CREATED = containersCreated
                     }
                 }
             }
@@ -80,7 +99,7 @@ def build_container(dockerhubName) {
 }
 
 def get_containers_created() {
-    return "$env.ALGORITHM_CONTAINERS_CREATED".tokenize(', []')
+    return "$env.CONTAINERS_CREATED".tokenize(', []')
 }
 
 def get_branch_tag() {
