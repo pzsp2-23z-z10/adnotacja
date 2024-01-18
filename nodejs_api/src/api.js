@@ -59,8 +59,10 @@ router.post('/new', async (req, res, next) => {
           selected_algs.forEach(service => queue.push(service,token))
           options = {"services":selected_algs}
         }
-        else
-          return res.status(400)
+        else{
+          console.error("unknown request params:",selected_algs)
+          return res.status(400).send()
+        }
         db.addAnalysis(token,options)
         //@TODO: fast forward to next check? otherwise some time is lost
       }
@@ -123,7 +125,6 @@ async function checkQueues(){
       }
       else{
         // service not busy and something is in queue, begin calculation
-        // @TODO: retrieve user data from database/file to be sent
         let token = queue.peek(name)
         let stream = fs.createReadStream(uploadDir+token)
         let [header,lines] = await vcf.parseFile(stream);
