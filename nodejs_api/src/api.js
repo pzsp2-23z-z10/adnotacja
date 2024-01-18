@@ -90,14 +90,14 @@ async function checkQueues(){
       if (await db.isServiceBusy(name)){
         console.log("Service",name," busy, check docker response...")
         // ping service to check status
-        let status = await outer_connections.askForStatus(value['address'],queue.peek(name))
+        let status = await outer_connections.askForStatus(queue.peek(name), value['address'], value['port'])
         if (status['done']==true){
           console.log("done")
           let token = queue.pop(name); //remove from queue
           let progress = db.getCalculationProgress(token)
           progress[name]=true
           db.modifyCalculationProgress(token,progress)
-          db.setServiceStatus(name,undefined)
+          db.setServiceStatus(name,"free")
         }
       }
       else{
@@ -111,9 +111,14 @@ async function checkQueues(){
         console.log("Have results: ")
         console.log(results.have_results)
 
-        // can remove this await
-        let result = await outer_connections.requestCalculation(results.no_results,value['address'])
-        db.setServiceStatus(name,queue.peek(name));
+        results.no_results.unshift(header.join("\t"));
+        let result = await outer_connections.requestCalculation(results.no_results, value['address'], value['port'])
+        if (result=="ok"){
+          db.setServiceStatus(name,queue.peek(name));
+        }
+        else{
+          console.error("Something went wrong:",result)
+        }
       }
     }
 }

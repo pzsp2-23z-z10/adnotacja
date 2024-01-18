@@ -13,13 +13,13 @@ async function initServices(services){
     //console.log(name+" exists? : "+service)
     if (!service){
       console.log("Adding new service to databse: "+name)
-      let a = new ServiceStatus({service_id:name,active_token:undefined})
+      let a = new ServiceStatus({service_id:name,active_token:"free"})
       a.save();
     }
     else{
       //!!!!!!! THIS CLEARS STATUES ON RESTART, MAYBE NOT GOOD !!!!!!
       console.log("Clearing services' statuses")
-      await ServiceStatus.findOneAndUpdate({ service_id: name }, {$set:{active_token:null}})
+      await ServiceStatus.findOneAndUpdate({ service_id: name }, {$set:{active_token:"free"}})
     }
   
   }
@@ -29,12 +29,12 @@ async function isServiceBusy(name){
   console.log("isb")
   let service = await ServiceStatus.findOne({ service_id: name })
   console.log("service '",name,"' status:",service)
-  console.log("busy?",service.active_token!=null)
-  return service.active_token!=null;
+  console.log("busy?",service.active_token!="free")
+  return service.active_token!="free";
 }
 
 async function setServiceStatus(name, status){
-  console.log("set service",name,"to status",status==undefined?"free":status+" (busy)")
+  console.log("set service",name,"to status",status=="free"?"free":status+" (busy)")
   // if status==undefined, then service is free
   let service = await ServiceStatus.findOneAndUpdate({ service_id: name }, {$set:{active_token:status}})
 }
@@ -81,7 +81,6 @@ async function addAnalysis(token, services){
 }
 
 async function findLinesInDb(lines, column_positions) {
-  console.log("find in db:",lines,column_positions)
   var have_results = [];
   var no_results = [];
 
