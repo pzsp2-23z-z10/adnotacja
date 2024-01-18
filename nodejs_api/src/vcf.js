@@ -11,7 +11,7 @@ async function parseFile(data){
   var header = ""
   for(let line of lines){
     if (line.slice(0,2) != '##') {
-      header = line.slice(1,line.length);
+      header = line;
       break;
     }
   };
