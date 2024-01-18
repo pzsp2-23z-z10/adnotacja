@@ -7,9 +7,8 @@ async function requestCalculation(fstream, serviceAddress, port=5000){
 
 	
 	let target = "http://"+serviceAddress+":"+port+'/api/calculateStuff'
-	console.log("Request calculation:", target, fstream)
+	console.log("Request calculation:", target, "lines:",fstream.length)
 	return await axios.post(target, fstream).then((res)=>{
-		console.log("got response",res.data)
 		return res.data["status"];
 	}).catch((error)=>{
 		if (error.code=="ECONNREFUSED")
@@ -25,7 +24,6 @@ async function askForStatus(token, serviceAddress, port=5000){
 	console.log("making request to "+target)
 
 	return await axios.get(target).then((res)=>{
-		console.log("got response",res.data)
 		return res.data;
 	}).catch((error)=>{
 		console.log("error")

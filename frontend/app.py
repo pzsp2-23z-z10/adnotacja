@@ -73,8 +73,8 @@ def status(token):
         except Exception:
             session['err'] = "Zły format danych. Możliwe, że dane zostały uszkodzone."
             return redirect(url_for('error'))
-        if isinstance(data, dict):
-            data = data["Wyniki"]
+        print(data)
+        data = data["results"]
         return render_template('status.html', data=data)
     if res.status_code == 202:
         return render_template("notyet.html")

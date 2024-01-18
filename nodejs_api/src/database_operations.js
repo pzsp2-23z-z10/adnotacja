@@ -18,7 +18,7 @@ async function initServices(services){
     }
     else{
       //!!!!!!! THIS CLEARS STATUES ON RESTART, MAYBE NOT GOOD !!!!!!
-      console.log("Clearing services' statuses")
+      console.log("Clearing service status:",name)
       await ServiceStatus.findOneAndUpdate({ service_id: name }, {$set:{active_token:"free"}})
     }
   
@@ -43,7 +43,6 @@ async function getAnalysis(id){
 	
 	console.log("Somebody asked for analysis id:",id)
 	let progress = await getCalculationProgress(id);
-	console.log(progress)
 	if (progress===null)
 	{
 		console.log("this token is not in database.")
@@ -54,6 +53,64 @@ async function getAnalysis(id){
 		console.log("Analysis is not finished.")
 		return {status:"Not_ready"}
 	}
+  
+  console.log("Data ready")
+
+  table_data = {"id":id,"results":{}}
+
+  for ( x of Object.keys(progress.progress)){
+    table_data["results"][x]=[{
+      "CHROM": "chr1",
+      "POS": 15765825,
+      "ID": "NM_007272:g.15765825:G>A",
+      "REF": "G",
+      "ALT": "A",
+      "QUAL": ".",
+      "FILTER": ".",
+      "INFO": "SPiP=A|NTR|00.04 % [00.02 % ; 00.08%]|+|substitution|G>A|Intron 1 (1795)|NM_007272|CTRC|donor|825|DeepIntron|0|Outside SPiCE Interpretation|0|No|NA|15765816|Acc|0.00206159394907144|No|Don|15765000|816|15765816|0.00161527498798199|No|15766795|0.0775463330795674|Yes|0.0775463330795674|Yes"
+    },{
+      "CHROM": "chr1",
+      "POS": 15765825,
+      "ID": "NM_007272:g.15765825:G>A",
+      "REF": "G",
+      "ALT": "A",
+      "QUAL": ".",
+      "FILTER": ".",
+      "INFO": "SPiP=A|NTR|00.04 % [00.02 % ; 00.08%]|+|substitution|G>A|Intron 1 (1795)|NM_007272|CTRC|donor|825|DeepIntron|0|Outside SPiCE Interpretation|0|No|NA|15765816|Acc|0.00206159394907144|No|Don|15765000|816|15765816|0.00161527498798199|No|15766795|0.0775463330795674|Yes|0.0775463330795674|Yes"
+    }]
+  }
+
+  table_data["results"]["pangolin"]=[{
+    "CHROM": "chr1",
+    "POS": 15765825,
+    "ID": "NM_007272:g.15765825:G>A",
+    "REF": "G",
+    "ALT": "A",
+    "QUAL": ".",
+    "FILTER": ".",
+    "INFO": "SPiP=A|NTR|00.04 % [00.02 % ; 00.08%]|+|substitution|G>A|Intron 1 (1795)|NM_007272|CTRC|donor|825|DeepIntron|0|Outside SPiCE Interpretation|0|No|NA|15765816|Acc|0.00206159394907144|No|Don|15765000|816|15765816|0.00161527498798199|No|15766795|0.0775463330795674|Yes|0.0775463330795674|Yes"
+  },{
+    "CHROM": "chr1",
+    "POS": 15765825,
+    "ID": "NM_007272:g.15765825:G>A",
+    "REF": "G",
+    "ALT": "A",
+    "QUAL": ".",
+    "FILTER": ".",
+    "INFO": "SPiP=A|NTR|00.04 % [00.02 % ; 00.08%]|+|substitution|G>A|Intron 1 (1795)|NM_007272|CTRC|donor|825|DeepIntron|0|Outside SPiCE Interpretation|0|No|NA|15765816|Acc|0.00206159394907144|No|Don|15765000|816|15765816|0.00161527498798199|No|15766795|0.0775463330795674|Yes|0.0775463330795674|Yes"
+  }]
+
+  // reorganize data into separate "files"
+  progress.requiredLines.forEach(variant => {
+    for (let [name,val] of Object.entries(variant.result))
+    table_data["results"][name].push(val)
+  })
+
+  console.log(table_data)
+  return table_data
+  
+
+
 	return {
   "id": 123,
   "Wyniki": [
@@ -77,17 +134,46 @@ async function getAnalysis(id){
 }
   
 async function addAnalysis(token, services){
+  console.log("ss:",services)
 	addCalculationProgress({"token":token,progress:getEmptyProgress(services)});
+}
+
+function getPermutationOfHeader(header){
+  var original = ["#CHROM", "POS", "REF", "ALT"];
+  var indices = original.map(function(x) {
+    return header.indexOf(x);
+  });
+  return indices
+}
+
+function linesToVariants(lines, column_positions){
+  console.log(lines)
+  let indices = getPermutationOfHeader(column_positions)
+  var to_calculate = []
+  lines.forEach(line => {
+    if (line[0] != '#') {
+      var elements = line.split(/[\s\t,]+/)
+      let g = new Genotype({chr:elements[indices[0]],pos:elements[indices[1]],ref:elements[indices[2]],alt:elements[indices[3]]})
+      g.save();
+      to_calculate = to_calculate.concat([g])
+      console.log(g)
+    }
+  }
+  )
+  return to_calculate;
+  
 }
 
 async function findLinesInDb(lines, column_positions) {
   var have_results = [];
   var no_results = [];
 
+  let indices = getPermutationOfHeader(column_positions)
+
   var promises = lines.map(async function (line) {
     if (line[0] != '#') {
       var elements = line.split(/[\s\t,]+/);
-      var values = [elements[column_positions[0]], elements[column_positions[1]], elements[column_positions[2]], elements[column_positions[3]]];
+      var values = [elements[indices[0]], elements[indices[1]], elements[indices[2]], elements[indices[3]]];
 
       var genotype = await getGenotype(values[0], values[1], values[2], values[3]);
 
@@ -155,4 +241,17 @@ async function modifyCalculationProgress(token, newProgress) {
     })
 }
 
-module.exports = {findLinesInDb, setServiceStatus, isServiceBusy,initServices,getAnalysis, addAnalysis, addGenotype, addCalculationProgress,modifyCalculationProgress, getCalculationProgress, getGenotype}
+function setCalculationTarget(token, variants){
+  console.log("Setting lines to", variants)
+  let doc = CalculationProgress.findOneAndUpdate({"token":token}, 
+        {$set:{requiredLines: variants}}, {new:true}).then(()=>{
+          console.log("updated target")})
+} 
+
+async function saveResults(rows, column_positions){
+  // rows - ['line1','line2','line3'] from vcf
+  let variants = linesToVariants(rows,column_positions)
+  console.log("Save results:",rows)
+}
+
+module.exports = {setCalculationTarget, linesToVariants, saveResults, findLinesInDb, setServiceStatus, isServiceBusy,initServices,getAnalysis, addAnalysis, addGenotype, addCalculationProgress,modifyCalculationProgress, getCalculationProgress, getGenotype}

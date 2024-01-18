@@ -4,7 +4,7 @@
 
 {% block content %}
     {% for item in data %}
-    <h1>Wyniki dla "{{item['name']}}"</h1>
+    <h1>Wyniki dla "{{item}}"</h1>
     <div class="table-responsive">
         <table class="table table-dark table-bordered align-middle">
             <thead>
@@ -20,11 +20,13 @@
                 </tr>
             </thead>
             <tbody>
+                {% for line in data[item] %}
                 <tr>
-                    {% for field in item['result'][0]%}
-                        <td style="word-wrap: break-word;max-width: 200px;"> {{item['result'][0][field]}} </td>
+                    {% for field in line%}
+                        <td style="word-wrap: break-word;max-width: 200px;"> {{line[field]}} </td>
                     {% endfor %}
                 </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>

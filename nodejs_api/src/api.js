@@ -47,10 +47,23 @@ router.post('/new', async (req, res, next) => {
       try {
         console.log("Starting analysis:",token)
         
-        //@TODO: allow user to make a choice here?
         //@TODO: save the file data somewhere in database
-        queue.pushAll(token)
-        db.addAnalysis(token,config)
+
+        var options = {}
+        let selected_algs = req.body.alg
+        if (typeof(selected_algs)=="string"){
+          queue.push(selected_algs,token)
+          options = {"services":[selected_algs]}
+        }
+        else if (Array.isArray(selected_algs)){
+          selected_algs.forEach(service => queue.push(service,token))
+          options = {"services":selected_algs}
+        }
+        else{
+          console.error("unknown request params:",selected_algs)
+          return res.status(400).send()
+        }
+        db.addAnalysis(token,options)
         //@TODO: fast forward to next check? otherwise some time is lost
       }
       catch (err){
@@ -104,15 +117,17 @@ async function checkQueues(){
           let progress = db.getCalculationProgress(token)
           progress[name]=true
           db.modifyCalculationProgress(token,progress)
+          console.log("Parsing result...")
+          let [header, lines] = vcf.parseArray(status['result'])
+          db.saveResults(lines,header)
           db.setServiceStatus(name,"free")
         }
       }
       else{
         // service not busy and something is in queue, begin calculation
-        // @TODO: retrieve user data from database/file to be sent
         let token = queue.peek(name)
         let stream = fs.createReadStream(uploadDir+token)
-        let [header,lines] = await vcf.parseFile(stream);
+        let [header,lines] = await vcf.parseFile(stream); //column order and relevant lines, as text
 
         var results = await db.findLinesInDb(lines, header)
         console.log("Have results: ")
@@ -121,7 +136,10 @@ async function checkQueues(){
         results.no_results.unshift(header.join("\t"));
         let result = await outer_connections.requestCalculation(results.no_results, value['address'], value['port'])
         if (result=="ok"){
+          // only when calculation start is confirmed, make service busy and remember what lines user wants 
           db.setServiceStatus(name,queue.peek(name));
+          let variants = db.linesToVariants(lines, header)
+          db.setCalculationTarget(token,variants) // what the user wants
         }
         else{
           console.error("Something went wrong:",result)
@@ -136,7 +154,7 @@ app.listen(process.env.PORT??=1234, () => {
   console.log(`API listening on port ${process.env.PORT}!`)
 
   queue.createQueues(config);
-  setInterval(checkQueues,15000);
+  setInterval(checkQueues,10000);
   //queue.push(Object.keys(config)[0],"token123")
 
 });
