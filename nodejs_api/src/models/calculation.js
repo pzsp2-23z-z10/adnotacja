@@ -1,4 +1,5 @@
 let mongoose = require('mongoose');
+const { Genotype } = require('./genotype');
 
 let calculationProgressSchema = new mongoose.Schema({
     token : {
@@ -7,7 +8,8 @@ let calculationProgressSchema = new mongoose.Schema({
     },
     progress : {
         type: mongoose.Schema.Types.Mixed
-    } 
+    },
+    requiredLines : ["Genotype"]
 });
 
 

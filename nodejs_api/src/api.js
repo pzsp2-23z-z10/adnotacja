@@ -127,7 +127,7 @@ async function checkQueues(){
         // service not busy and something is in queue, begin calculation
         let token = queue.peek(name)
         let stream = fs.createReadStream(uploadDir+token)
-        let [header,lines] = await vcf.parseFile(stream);
+        let [header,lines] = await vcf.parseFile(stream); //column order and relevant lines, as text
 
         var results = await db.findLinesInDb(lines, header)
         console.log("Have results: ")
@@ -136,7 +136,10 @@ async function checkQueues(){
         results.no_results.unshift(header.join("\t"));
         let result = await outer_connections.requestCalculation(results.no_results, value['address'], value['port'])
         if (result=="ok"){
+          // only when calculation start is confirmed, make service busy and remember what lines user wants 
           db.setServiceStatus(name,queue.peek(name));
+          let variants = db.linesToVariants(lines, header)
+          db.setCalculationTarget(token,variants) // what the user wants
         }
         else{
           console.error("Something went wrong:",result)
