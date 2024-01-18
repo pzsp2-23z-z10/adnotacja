@@ -3,6 +3,8 @@ pipeline {
     environment {
         // credentials used to push images to dockerhub
         DOCKERHUB_CREDS = credentials('dockerhub-creds')
+        // the folder in which api files can be found
+        API_DIR = 'nodejs_api'
         // prefix for all containers with analysis algorithms
         ALGORITHM_CONTAINER_PREFIX = 'adnotacja-algorytm'
         // the folder in which algorithms can be found
@@ -13,6 +15,16 @@ pipeline {
         ALGORITHM_NAME_DELIMITER = '_'
     }
     stages {
+        stage('build-api') {
+            steps {
+                dir("$env.WORKSPACE/$env.API_DIR") {
+                    script {
+                        def apiContainerName = "$DOCKERHUB_CREDS_USR/adnotacja-api"
+                        build_container(apiContainerName)
+                    }
+                }
+            }
+        }
         stage('build-algorithms') {
             steps {
                 dir("$env.WORKSPACE/$env.ALGORITHMS_DIR"){
