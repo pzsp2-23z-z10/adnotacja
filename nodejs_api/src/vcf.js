@@ -8,6 +8,10 @@ async function parseFile(data){
   } catch (error) {
     console.error("Error:", error);
   }
+  return parseArray(lines)
+}
+
+function parseArray(lines){
   var header = ""
   for(let line of lines){
     if (line.slice(0,2) != '##') {
@@ -67,4 +71,4 @@ function parseStreamByLines(data) {
     });
   }
 
-module.exports = {parseFile}
+module.exports = {parseArray, parseFile}

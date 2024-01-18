@@ -47,10 +47,21 @@ router.post('/new', async (req, res, next) => {
       try {
         console.log("Starting analysis:",token)
         
-        //@TODO: allow user to make a choice here?
         //@TODO: save the file data somewhere in database
-        queue.pushAll(token)
-        db.addAnalysis(token,config)
+
+        var options = {}
+        let selected_algs = req.body.alg
+        if (typeof(selected_algs)=="string"){
+          queue.push(selected_algs,token)
+          options = {"services":[selected_algs]}
+        }
+        else if (Array.isArray(selected_algs)){
+          selected_algs.forEach(service => queue.push(service,token))
+          options = {"services":selected_algs}
+        }
+        else
+          return res.status(400)
+        db.addAnalysis(token,options)
         //@TODO: fast forward to next check? otherwise some time is lost
       }
       catch (err){
@@ -103,6 +114,9 @@ async function checkQueues(){
           let token = queue.pop(name); //remove from queue
           let progress = db.getCalculationProgress(token)
           progress[name]=true
+          console.log("Parsing result...")
+          let [header, lines] = vcf.parseArray(status['result'])
+          db.saveResults(lines)
           db.modifyCalculationProgress(token,progress)
           db.setServiceStatus(name,"free")
         }

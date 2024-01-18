@@ -18,7 +18,7 @@ async function initServices(services){
     }
     else{
       //!!!!!!! THIS CLEARS STATUES ON RESTART, MAYBE NOT GOOD !!!!!!
-      console.log("Clearing services' statuses")
+      console.log("Clearing service status:",name)
       await ServiceStatus.findOneAndUpdate({ service_id: name }, {$set:{active_token:"free"}})
     }
   
@@ -77,6 +77,7 @@ async function getAnalysis(id){
 }
   
 async function addAnalysis(token, services){
+  console.log("ss:",services)
 	addCalculationProgress({"token":token,progress:getEmptyProgress(services)});
 }
 
@@ -155,4 +156,9 @@ async function modifyCalculationProgress(token, newProgress) {
     })
 }
 
-module.exports = {findLinesInDb, setServiceStatus, isServiceBusy,initServices,getAnalysis, addAnalysis, addGenotype, addCalculationProgress,modifyCalculationProgress, getCalculationProgress, getGenotype}
+async function saveResults(rows){
+  // rows - ['line1','line2','line3'] from vcf
+  console.log("Save results:",rows)
+}
+
+module.exports = {saveResults, findLinesInDb, setServiceStatus, isServiceBusy,initServices,getAnalysis, addAnalysis, addGenotype, addCalculationProgress,modifyCalculationProgress, getCalculationProgress, getGenotype}
