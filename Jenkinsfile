@@ -43,32 +43,13 @@ pipeline {
                 sh 'echo "tests passed"'
             }
         }
-        stage('push-master') {
-            when {
-                branch 'master'
-            }
-            steps {
-                sh 'docker login -u $DOCKERHUB_CREDS_USR -p $DOCKERHUB_CREDS_PSW'
-                sh 'docker tag $DOCKERHUB_CREDS_USR/$CONTAINER_NAME $DOCKERHUB_CREDS_USR/$CONTAINER_NAME:master-latest'
-                sh 'docker push $DOCKERHUB_CREDS_USR/$CONTAINER_NAME:master-latest'
-            }
-        }
-        stage('push-release') {
-            when {
-                branch 'release'
-            }
-            steps {
-                sh 'docker login -u $DOCKERHUB_CREDS_USR -p $DOCKERHUB_CREDS_PSW'
-                sh 'docker push $DOCKERHUB_CREDS_USR/$CONTAINER_NAME:latest'
-            }
-        }
         stage('push') {
             steps {
                 script {
-                        def tag = "test"
-                        login_to_dockerhub()
-                        def containers = get_containers_created()
-                        push_containers(containers, tag)
+                    def tag = get_branch_tag()
+                    login_to_dockerhub()
+                    def containers = get_containers_created()
+                    push_containers(containers, tag)
                 }
             }
         }
@@ -100,6 +81,14 @@ def build_container(dockerhubName) {
 
 def get_containers_created() {
     return "$env.ALGORITHM_CONTAINERS_CREATED".tokenize(', []')
+}
+
+def get_branch_tag() {
+    if (env.BRANCH_NAME == 'master') {
+        return "latest"
+    } else {
+        return "$env.BRANCH_NAME"
+    }
 }
 
 def login_to_dockerhub() {
