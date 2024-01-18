@@ -116,10 +116,10 @@ async function checkQueues(){
           let token = queue.pop(name); //remove from queue
           let progress = db.getCalculationProgress(token)
           progress[name]=true
+          db.modifyCalculationProgress(token,progress)
           console.log("Parsing result...")
           let [header, lines] = vcf.parseArray(status['result'])
-          db.saveResults(lines)
-          db.modifyCalculationProgress(token,progress)
+          db.saveResults(lines,header)
           db.setServiceStatus(name,"free")
         }
       }
@@ -154,7 +154,7 @@ app.listen(process.env.PORT??=1234, () => {
   console.log(`API listening on port ${process.env.PORT}!`)
 
   queue.createQueues(config);
-  setInterval(checkQueues,15000);
+  setInterval(checkQueues,10000);
   //queue.push(Object.keys(config)[0],"token123")
 
 });
