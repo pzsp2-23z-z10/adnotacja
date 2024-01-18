@@ -13,23 +13,30 @@ async function initServices(services){
     //console.log(name+" exists? : "+service)
     if (!service){
       console.log("Adding new service to databse: "+name)
-      let a = new ServiceStatus({service_id:name,active_token:"token"})
+      let a = new ServiceStatus({service_id:name,active_token:undefined})
       a.save();
+    }
+    else{
+      //!!!!!!! THIS CLEARS STATUES ON RESTART, MAYBE NOT GOOD !!!!!!
+      console.log("Clearing services' statuses")
+      await ServiceStatus.findOneAndUpdate({ service_id: name }, {$set:{active_token:null}})
     }
   
   }
 }
 
 async function isServiceBusy(name){
+  console.log("isb")
   let service = await ServiceStatus.findOne({ service_id: name })
-  return service.active_token!=undefined;
+  console.log("service '",name,"' status:",service)
+  console.log("busy?",service.active_token!=null)
+  return service.active_token!=null;
 }
 
 async function setServiceStatus(name, status){
+  console.log("set service",name,"to status",status==undefined?"free":status+" (busy)")
   // if status==undefined, then service is free
-  let service = await ServiceStatus.findOne({ service_id: name })
-  service.active_token=status;
-
+  let service = await ServiceStatus.findOneAndUpdate({ service_id: name }, {$set:{active_token:status}})
 }
 
 async function getAnalysis(id){
@@ -68,92 +75,13 @@ async function getAnalysis(id){
   ]
 }
 }
-
-async function makeAnalysis(data){
-
-	//@TODO check if valid
-	console.log("Starting analysis:",data.path);
-  try {
-  var lines = await parseStreamByLines(data);
-  } catch (error) {
-    console.error("Error:", error);
-  }
-  var header = ""
-  for(let line of lines){
-    if (line.slice(0,2) != '##') {
-      header = line.slice(1,line.length);
-      break;
-    }
-  };
-  var column_names = header.split(/[\s,\t]+/)
-  var column_positions = [column_names.indexOf('CHROM'), column_names.indexOf('POS'), column_names.indexOf('REF'), column_names.indexOf('ALT')]
-  var results = await findLinesInDb(lines, column_positions)
-  console.log("Have results: ")
-  console.log(results.have_results)
-	// here will be some concurrent action, request is scheduled and token is returned
-	outer_connections.requestCalculation(results.no_results)
-	const token = Math.floor(new Date().getTime() / 1000)
-	addCalculationProgress({"token":token,progress:[false]});
-	setTimeout(()=> {
-		//symulacja tego, że dane są gotowe
-		modifyCalculationProgress(token,[true]);
-		console.log("!!! Analysis done for token",token)
-	}, 10000);
-	return token;
-}
   
 async function addAnalysis(token, services){
 	addCalculationProgress({"token":token,progress:getEmptyProgress(services)});
 }
 
-function parseStreamByLines(data) {
-  return new Promise((resolve, reject) => {
-  var stream = require('stream'); 
-  var xtream = new stream.Transform( { objectMode: true } );
-
-  xtream._transform = function(chunk, encoding, done) {
-    var strData = chunk.toString();
-
-    if (this._invalidLine) {
-      strData = this._invalidLine + strData;
-    };
-
-    var objLines = strData.split("\n"); 
-    this._invalidLine = objLines.splice(objLines.length-1, 1)[0];  
-    this.push(objLines);
-
-    done();
-  };
-
-  xtream._flush = function(done) {
-    if (this._invalidLine) {   
-      this.push([this._invalidLine]); 
-    };
-
-    this._invalidLine = null;
-    done();
-  };
-  
-  var all_lines = [];
-  data.pipe(xtream);
-  xtream.on('readable', function(){ 
-    while (lines = xtream.read()) { 
-      lines.forEach(function(line, index){
-        all_lines.push(line);
-      });   
-    }
-    xtream.on('end', function () {
-      resolve(all_lines);
-    });
-
-    xtream.on('error', function (err) {
-      reject(err);
-    });
-  });
-  });
-}
-
 async function findLinesInDb(lines, column_positions) {
+  console.log("find in db:",lines,column_positions)
   var have_results = [];
   var no_results = [];
 
@@ -228,6 +156,4 @@ async function modifyCalculationProgress(token, newProgress) {
     })
 }
 
-
-
-module.exports = {setServiceStatus, isServiceBusy,initServices,getAnalysis, makeAnalysis, addGenotype, addCalculationProgress,modifyCalculationProgress, getCalculationProgress, getGenotype}
+module.exports = {findLinesInDb, setServiceStatus, isServiceBusy,initServices,getAnalysis, addAnalysis, addGenotype, addCalculationProgress,modifyCalculationProgress, getCalculationProgress, getGenotype}

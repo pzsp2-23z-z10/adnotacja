@@ -5,6 +5,9 @@ from flask import Flask, jsonify, request
 
 API_PREFIX = "/api/"
 app = Flask(__name__)
+@app.route(API_PREFIX + "status", methods=["GET"])
+def status():
+    return {"done":True}
 
 
 @app.route(API_PREFIX + "calculateStuff", methods=["POST"])
