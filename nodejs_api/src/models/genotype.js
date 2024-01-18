@@ -17,10 +17,9 @@ let genotypeSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    result : [{
-        name: String,
-        value: Number
-    }]
+    result : {
+        type: mongoose.Schema.Types.Mixed,
+    }
 });
 
 const Genotype = mongoose.model("Genotype", genotypeSchema);

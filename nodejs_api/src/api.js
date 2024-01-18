@@ -119,7 +119,7 @@ async function checkQueues(){
           db.modifyCalculationProgress(token,progress)
           console.log("Parsing result...")
           let [header, lines] = vcf.parseArray(status['result'])
-          db.saveResults(lines,header)
+          db.saveResults(name,lines,header)
           db.setServiceStatus(name,"free")
         }
       }
@@ -129,7 +129,7 @@ async function checkQueues(){
         let stream = fs.createReadStream(uploadDir+token)
         let [header,lines] = await vcf.parseFile(stream); //column order and relevant lines, as text
 
-        var results = await db.findLinesInDb(lines, header)
+        var results = await db.findLinesInDb(lines, header, name)
         console.log("Have results: ")
         console.log(results.have_results)
 
@@ -138,7 +138,8 @@ async function checkQueues(){
         if (result=="ok"){
           // only when calculation start is confirmed, make service busy and remember what lines user wants 
           db.setServiceStatus(name,queue.peek(name));
-          let variants = db.linesToVariants(lines, header)
+          let variants = await db.linesToVariants(lines, header)
+          console.log("got variants",variants.length)
           db.setCalculationTarget(token,variants) // what the user wants
         }
         else{
