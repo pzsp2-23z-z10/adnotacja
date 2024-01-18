@@ -31,8 +31,9 @@ def status():
 @app.route(API_PREFIX + "calculateStuff", methods=["POST"])
 def calculateStuff():
     record = json.loads(request.data)
-    print("this is vcf:")
-    print(record)
+    # can do some quick file checks here, or just pass to alg
+    if all("#CHROM" not in r for r in record):
+        return {"error":"missing header"},400
 
     return {"status":"ok"}
 
