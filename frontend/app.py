@@ -1,15 +1,11 @@
 from flask import Flask, render_template, redirect
 from flask import request as rq, session, url_for
-from configure import PORT, HOST, BACKEND_LINK, ANALYSIS
+from configure import BACKEND_LINK, ANALYSIS
 import requests
-from datetime import timedelta
-# import parse_data
-# import vcf
 
 
 app = Flask(__name__)
-app.secret_key = 'Bruhuhuhuhu64'
-app.permanent_session_lifetime = timedelta(seconds=60)
+app.secret_key = "PZSP2-z10"
 
 
 def requires_token(view_func):
@@ -29,12 +25,21 @@ def index():
 @app.route(f'/{ANALYSIS}/add', methods=['GET', 'POST'])
 def add():
     if rq.method == 'GET':
-        return render_template('upload.html')
-    elif rq.method == 'POST':
+        link = f"{BACKEND_LINK}/analysis/algorithms"
+        try:
+            algs = requests.get(link, timeout=60).json()
+        except Exception:
+            algs = []
+        return render_template('upload.html', algs=algs)
+    if rq.method == 'POST':
         file = rq.files['file']
+        algs = rq.form.getlist('alg')
+        selected_alg = {"alg": algs}
         try:
             link = f"{BACKEND_LINK}/analysis/new"
-            token = requests.post(link, files={'file': (file.filename, file)}).json()['token']
+            res = requests.post(link, files={'file': (file.filename, file)},
+                                data=selected_alg, timeout=60)
+            token = res.json()['token']
             return redirect(url_for('uploaded', token=token))
         except Exception:
             session['err'] = 'Zły format danych lub mogły zostać uszkodzone'
@@ -57,7 +62,11 @@ def error():
 @app.route(f'/{ANALYSIS}/status', methods=['GET'])
 @requires_token
 def status(token):
-    res = requests.get(f'{BACKEND_LINK}/analysis/status/{token}')
+    try:
+        res = requests.get(f'{BACKEND_LINK}/analysis/status/{token}', timeout=60)
+    except TimeoutError:
+        session["err"] = "Nie można się połączyć z serwerem."
+        return redirect(url_for("error"))
     if res.status_code == 200:
         try:
             data = res.json()
@@ -67,9 +76,9 @@ def status(token):
         if isinstance(data, dict):
             data = data["Wyniki"]
         return render_template('status.html', data=data)
-    elif res.status_code == 202:
+    if res.status_code == 202:
         return render_template("notyet.html")
-    elif res.status_code == 404:
+    if res.status_code == 404:
         session['mes'] = "Zły token. Sprawdź czy na pewno podałeś poprawny token."
         return redirect(url_for("error"))
     return redirect(url_for("error"))
@@ -79,7 +88,3 @@ def status(token):
 def token_input():
     data = rq.args.get('data', None)
     return render_template("token_input.html", data=data)
-
-
-if __name__ == "__main__":
-    app.run(host=HOST, port=PORT)

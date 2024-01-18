@@ -17,30 +17,22 @@ pipeline {
             steps {
                 dir("$env.WORKSPACE/$env.ALGORITHMS_DIR"){
                     script {
-                            def buildCommand = "docker build . -t "
+                        def algorithmContainersCreated = []
 
-                            def algorithmContainersCreated = []
-
-                            def subDirs = findFiles().findAll { file -> file.directory }
-                            subDirs.each { subDir ->
-                                def algorithmNumber = "$subDir.name".split("$env.ALGORITHM_NAME_DELIMITER")[0]
-                                dir("$subDir.name/$env.ALGORITHM_CONTAINERS_DIR") {
-                                    def containers = findFiles().findAll { file -> file.directory }
-                                    containers.each { container ->
-                                        def containerNumber = "$container.name".split("$env.ALGORITHM_NAME_DELIMITER")[0]
-                                        def containerName = "$env.ALGORITHM_CONTAINER_PREFIX-$algorithmNumber-$containerNumber"
-                                        def dockerhubName = "$env.DOCKERHUB_CREDS_USR/$containerName"
-                                        dir("$container") {
-                                            println "Building container for algorithm: $containerName"
-                                            def process = "$buildCommand $dockerhubName".execute()
-                                            process.waitFor()
-                                            println "${process.text}"
-                                            algorithmContainersCreated.add("$dockerhubName")
-                                            println "Successfully built containter: $containerName"
-                                        }
+                        def subDirs = get_sub_dirs()
+                        subDirs.each { subDir ->
+                            def algorithmNumber = get_algorithm_number(subDir)
+                            dir("$subDir.name/$env.ALGORITHM_CONTAINERS_DIR") {
+                                def containers = get_sub_dirs()
+                                containers.each { container ->
+                                    def dockerhubName = generate_container_name(algorithmNumber, container)
+                                    dir("$container") {
+                                        build_container(dockerhubName)
+                                        algorithmContainersCreated.add("$dockerhubName")
                                     }
                                 }
                             }
+                        }
                         env.ALGORITHM_CONTAINERS_CREATED = algorithmContainersCreated
                     }
                 }
@@ -51,39 +43,62 @@ pipeline {
                 sh 'echo "tests passed"'
             }
         }
-        stage('push-master') {
-            when {
-                branch 'master'
-            }
-            steps {
-                sh 'docker login -u $DOCKERHUB_CREDS_USR -p $DOCKERHUB_CREDS_PSW'
-                sh 'docker tag $DOCKERHUB_CREDS_USR/$CONTAINER_NAME $DOCKERHUB_CREDS_USR/$CONTAINER_NAME:master-latest'
-                sh 'docker push $DOCKERHUB_CREDS_USR/$CONTAINER_NAME:master-latest'
-            }
-        }
-        stage('push-release') {
-            when {
-                branch 'release'
-            }
-            steps {
-                sh 'docker login -u $DOCKERHUB_CREDS_USR -p $DOCKERHUB_CREDS_PSW'
-                sh 'docker push $DOCKERHUB_CREDS_USR/$CONTAINER_NAME:latest'
-            }
-        }
         stage('push') {
             steps {
                 script {
-                    // TODO: fix push not working
-                    "docker login -u $env.DOCKERHUB_CREDS_USR -p $env.DOCKERHUB_CREDS_PSW".execute()
-                    def containers = "$env.ALGORITHM_CONTAINERS_CREATED".tokenize(', []')
-                    containers.each { container ->
-                        def process = "docker push $container".execute()
-                        process.waitFor()
-                        println "${process.text}"
-                        println "Successfully pushed container: $container"
-                    }
+                    def tag = get_branch_tag()
+                    login_to_dockerhub()
+                    def containers = get_containers_created()
+                    push_containers(containers, tag)
                 }
             }
         }
+        stage('cleanup') {
+            steps {
+                cleanWs()
+            }
+        }
+    }
+}
+
+def get_sub_dirs() {
+    return findFiles().findAll { file -> file.directory }
+}
+
+def get_algorithm_number(subDir) {
+    return "$subDir.name".split("$env.ALGORITHM_NAME_DELIMITER")[0]
+}
+
+def generate_container_name(algorithmNumber, container) {
+    def containerNumber = "$container.name".split("$env.ALGORITHM_NAME_DELIMITER")[0]
+    def containerName = "$env.ALGORITHM_CONTAINER_PREFIX-$algorithmNumber-$containerNumber"
+    return "$env.DOCKERHUB_CREDS_USR/$containerName"
+}
+
+def build_container(dockerhubName) {
+    sh(returnStdout: true, script: "docker build . -t $dockerhubName")
+}
+
+def get_containers_created() {
+    return "$env.ALGORITHM_CONTAINERS_CREATED".tokenize(', []')
+}
+
+def get_branch_tag() {
+    if (env.BRANCH_NAME == 'master') {
+        return "latest"
+    } else {
+        return "$env.BRANCH_NAME"
+    }
+}
+
+def login_to_dockerhub() {
+    sh(returnStdout: true, script: "echo $DOCKERHUB_CREDS_PSW | docker login -u $DOCKERHUB_CREDS_USR --password-stdin")
+}
+
+def push_containers(containers, tag) {
+    containers.each { container ->
+        sh(returnStdout:true, script: "docker tag $container $container:$tag")
+        sh(returnStdout:true, script: "docker push $container:$tag")
+        println "Successfully pushed container: $container"
     }
 }

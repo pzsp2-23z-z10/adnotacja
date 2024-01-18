@@ -1,4 +1,7 @@
 services:
-  pangolin5:
+  SPiP:
     address: "localhost"
     port: 5000
+  pangolin:
+    address: "localhost"
+    port: 6060
