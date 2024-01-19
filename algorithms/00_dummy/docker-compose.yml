@@ -1,9 +1,9 @@
 ---
 version: "3"
 services:
-  algorithm_01:
-    container_name: algorithm01
+  dummy:
+    container_name: dummy
     network_mode: "host"
     build:
-      context: ./containers/00_container1
+      context: ./containers/dummy
       dockerfile: Dockerfile

@@ -1,0 +1,9 @@
+---
+version: "3"
+services:
+  spip:
+    container_name: SPiP
+    network_mode: "host"
+    build:
+      context: ./containers/01_container2
+      dockerfile: Dockerfile

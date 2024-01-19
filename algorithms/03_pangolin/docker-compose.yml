@@ -1,8 +1,8 @@
 ---
 version: "3"
 services:
-  algorithm_00:
-    container_name: algorithm00
+  pangolin:
+    container_name: pangilin
     network_mode: "host"
     build:
       context: ./containers/00_container1
