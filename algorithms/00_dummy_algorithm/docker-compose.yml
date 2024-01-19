@@ -7,3 +7,10 @@ services:
     build:
       context: ./containers/00_container1
       dockerfile: Dockerfile
+
+  algorithm_01:
+    container_name: algorithm01
+    network_mode: "host"
+    build:
+      context: ./containers/01_container2
+      dockerfile: Dockerfile

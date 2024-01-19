@@ -3,6 +3,7 @@
 import json
 from flask import Flask, jsonify, request
 import os
+import subprocess
 
 print("out.vcf exists?:",os.path.isfile('out.vcf'))
 
@@ -11,11 +12,14 @@ app = Flask(__name__)
 @app.route(API_PREFIX + "status", methods=["GET"])
 def status():
     # check if output file has been created by program, then return it
+    command = "pangolin "
+    result = subprocess.run(command, shell=True, text=True)
+    print(result.stdout)
     try:
         f = open('out.vcf')
     except FileNotFoundError:
         return {"done":False}
-    
+
     with f:
         lines = f.readlines()
     return {"done":True,"result":lines}
@@ -32,4 +36,4 @@ def calculateStuff():
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host="0.0.0.0", port="5000")
