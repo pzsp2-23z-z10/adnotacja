@@ -3,7 +3,7 @@ files:
 services:
   SPiP:
     address: "localhost"
-    port: 5000
+    port: 6000
   pangolin:
     address: "localhost"
-    port: 6060
+    port: 5000
