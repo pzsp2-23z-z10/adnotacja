@@ -1,1 +1,6 @@
 Flask==2.3.2
+gffutils
+biopython
+pandas
+pyfastx
+pyvcf==0.6.8
