@@ -12,8 +12,6 @@ app = Flask(__name__)
 @app.route(API_PREFIX + "status", methods=["GET"])
 def status():
     # check if output file has been created by program, then return it
-    command = "pangolin "
-    result = subprocess.run(command, shell=True, text=True)
     print(result.stdout)
     try:
         f = open('out.vcf')
