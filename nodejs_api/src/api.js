@@ -8,8 +8,9 @@ const db = require('./database_operations.js');
 const vcf = require('./vcf.js')
 const outer_connections = require('./outer_connections.js')
 const queue = require('./queue.js')
+const util = require('./util.js')
 config = require('./config.js')
-db.initServices(config)
+db.initServices(config.services)
 
 
 app = express()
@@ -18,8 +19,6 @@ app.use(bodyParser.json({limit: '10mb'}));
 app.use(fileUpload());
 
 app.use('/analysis', router)
-
-const uploadDir = "/tmp/"
 
 router.post('/new', async (req, res, next) => {
 /*
@@ -41,7 +40,7 @@ router.post('/new', async (req, res, next) => {
   // console.log(req.body.alg);  lista wybranych algorytmów np: [ 'pangolin5', 'SPiP' ]
 
   var token = Math.floor(new Date().getTime() / 1000)
-  tmpFile = uploadDir + token
+  tmpFile = config.files.temp_dir + token
   req.files.file.mv(tmpFile, async function(err){
       if (err) return res.status(500).send(err);
       try {
@@ -99,13 +98,13 @@ router.get('/status/:token', async (req, res, next) => {
 });
 
 router.get('/algorithms', async (req, res, next) => {
-  const service_names = Object.keys(config);
+  const service_names = Object.keys(config.services);
   return res.status(200).send(service_names);
 });
 
 async function checkQueues(){
   console.debug("Periodic queue check")
-  for (const [name, value] of Object.entries(config)){
+  for (const [name, value] of Object.entries(config.services)){
     if (!queue.isQueueEmpty(name)){
       if (await db.isServiceBusy(name)){
         console.log("Service",name," busy, check docker response...")
@@ -121,12 +120,13 @@ async function checkQueues(){
           let [header, lines] = vcf.parseArray(status['result'])
           db.saveResults(name,lines,header)
           db.setServiceStatus(name,"free")
+          util.cleanUp(token)
         }
       }
       else{
         // service not busy and something is in queue, begin calculation
         let token = queue.peek(name)
-        let stream = fs.createReadStream(uploadDir+token)
+        let stream = fs.createReadStream(config.files.temp_dir+token)
         let [header,lines] = await vcf.parseFile(stream); //column order and relevant lines, as text
 
         var results = await db.findLinesInDb(lines, header, name)
@@ -154,8 +154,8 @@ async function checkQueues(){
 app.listen(process.env.PORT??=1234, () => {
   console.log(`API listening on port ${process.env.PORT}!`)
 
-  queue.createQueues(config);
+  queue.createQueues(config.services);
   setInterval(checkQueues,10000);
-  //queue.push(Object.keys(config)[0],"token123")
+  //queue.push(Object.keys(config.services)[0],"token123")
 
 });
