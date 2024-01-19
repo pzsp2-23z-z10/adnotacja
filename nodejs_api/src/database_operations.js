@@ -65,7 +65,15 @@ async function getAnalysis(id){
 
   for (vcf_line of progress.requiredLines){
     for ( service of Object.keys(progress.progress)){
-      table_data["results"][service].push({"INFO":vcf_line.result[service]})
+      data = {"#CHROM": vcf_line.chr,
+              "POS":    vcf_line.pos,
+              "ID":     ".",
+              "REF":    vcf_line.ref,
+              "ALT":    vcf_line.alt,
+              "QUAL":   ".",
+              "FILTER": ".",
+              "INFO":   vcf_line.result[service]}
+      table_data["results"][service].push(data)
     }
   }
 
