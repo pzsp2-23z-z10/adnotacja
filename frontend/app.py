@@ -29,7 +29,7 @@ def add():
         try:
             algs = requests.get(link, timeout=60).json()
         except Exception:
-            algs = []
+            algs = None
         return render_template('upload.html', algs=algs)
     if rq.method == 'POST':
         file = rq.files['file']
