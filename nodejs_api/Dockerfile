@@ -8,8 +8,10 @@ RUN adduser user --disabled-password --gecos ""
 USER user
 WORKDIR /usr/src/app
 
-COPY ./src .
+COPY ./src/* ./src/
+COPY ./src/models/* ./src/models/
 COPY ./index.js .
+COPY ./config.yml .
 
 EXPOSE 1234
 CMD [ "node", "index.js"]
