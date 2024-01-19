@@ -4,7 +4,6 @@ const outer_connections = require('./outer_connections.js')
 const { Genotype } = require('./models/genotype.js');
 const { getEmptyProgress,CalculationProgress,ServiceStatus } = require('./models/calculation.js');
 
-
 async function initServices(services){
   console.log("Initialising db")
   // creates entries for each service
@@ -26,7 +25,6 @@ async function initServices(services){
 }
 
 async function isServiceBusy(name){
-  console.log("isb")
   let service = await ServiceStatus.findOne({ service_id: name })
   console.log("service '",name,"' status:",service)
   console.log("busy?",service.active_token!="free")
@@ -53,8 +51,6 @@ async function getAnalysis(id){
 		console.log("Analysis is not finished.")
 		return {status:"Not_ready"}
 	}
-  
-  console.log("Data ready", progress.requiredLines)
 
   table_data = {"id":id,"results":{}}
 
@@ -77,7 +73,6 @@ async function getAnalysis(id){
     }
   }
 
-  console.log(table_data)
   return table_data
 }
   
@@ -95,7 +90,6 @@ function getPermutationOfHeader(header){
 
 async function linesToVariants(lines, column_positions, service_name=null){
   // turns vcf lines into variant objects. Existing ones in database are being found and returned
-  console.log(lines)
   let indices = getPermutationOfHeader(column_positions)
   var to_calculate = []
   await Promise.all(lines.map(async line => {
@@ -113,7 +107,7 @@ async function linesToVariants(lines, column_positions, service_name=null){
           g.result=important
         }
         else if (g.result[service_name]!=undefined){
-            console.error("trying to overwrite existing data")
+            //console.error("trying to overwrite existing data")
         }
         else{
           g.result[service_name]=elements[indices[7]]
@@ -143,15 +137,13 @@ async function findLinesInDb(lines, column_positions, name=null) {
       var genotype = await getGenotype(values[0], values[1], values[2], values[3]);
 
       if (genotype.length != 0) {
-        console.log("Found in db: " + line);
+        //console.log("Found in db: " + line);
         var all_results = '';
         for (let i = 0; i < genotype.length; i++) {
           genotype[i].result.forEach((nestedItem) => {
             all_results += nestedItem.name + " " + nestedItem.value + " "
           });
         }
-        console.log('All results ');
-        console.log(all_results)
         if (all_results[name]!=undefined){
           have_results.push(line + all_results);
         }
@@ -216,7 +208,6 @@ async function modifyCalculationProgress(token, newProgress) {
 
 function setCalculationTarget(token, variants){
   variants=variants.map(v=> v._id)
-  console.log("Setting lines to", variants)
   let doc = CalculationProgress.findOneAndUpdate({"token":token}, 
         {$set:{requiredLines: variants}}, {new:true}).then(()=>{
           console.log("updated target")})
@@ -230,3 +221,4 @@ async function saveResults(service_name, rows, column_positions){
 }
 
 module.exports = {setCalculationTarget, linesToVariants, saveResults, findLinesInDb, setServiceStatus, isServiceBusy,initServices,getAnalysis, addAnalysis, addGenotype, addCalculationProgress,modifyCalculationProgress, getCalculationProgress, getGenotype}
+
