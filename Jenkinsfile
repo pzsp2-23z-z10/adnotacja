@@ -59,6 +59,10 @@ pipeline {
         }
         stage('test') {
             steps {
+                // Tests would have been run here, but we are limited by the resources
+                // on our Jenkins instance. Still, they can be run locally with pytest.
+                // As a proof of them passing, we included a screenshot of them in our
+                // project's documentation.
                 sh 'echo "tests passed"'
             }
         }
