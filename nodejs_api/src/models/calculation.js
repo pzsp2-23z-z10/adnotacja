@@ -9,7 +9,7 @@ let calculationProgressSchema = new mongoose.Schema({
     progress : {
         type: mongoose.Schema.Types.Mixed
     },
-    requiredLines : ["Genotype"]
+    requiredLines : [{ type: mongoose.ObjectId, ref: Genotype }]
 });
 
 

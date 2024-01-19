@@ -42,7 +42,7 @@ async function setServiceStatus(name, status){
 async function getAnalysis(id){
 	
 	console.log("Somebody asked for analysis id:",id)
-	let progress = await getCalculationProgress(id);
+	let progress = await getCalculationProgress(id, populate=true);
 	if (progress===null)
 	{
 		console.log("this token is not in database.")
@@ -109,18 +109,18 @@ async function linesToVariants(lines, column_positions, service_name=null){
       if (service_name){
         let important = {}; important[service_name]=elements[indices[7]]
         // data is being saved, name is the service name that just gave data, write that to db
-        if (g.result=={} || g.result.length==0){
-            g.result=important
-          }
+        if (g.result==undefined || (typeof(g.result=="object") && Object.keys(g.result).length==0)){
+          g.result=important
+        }
         else if (g.result[service_name]!=undefined){
             console.error("trying to overwrite existing data")
         }
         else{
           g.result[service_name]=elements[indices[7]]
         }
-        g.save()
       }
-      console.log("concat something")
+      g.markModified('result');
+      g.save()
       to_calculate = to_calculate.concat([g])
     }
   }))
@@ -189,8 +189,11 @@ async function addCalculationProgress(progress) {
     state.save();
 }
 
-async function getCalculationProgress(token) {
+async function getCalculationProgress(token, populate=false) {
+  if (!populate)
     return CalculationProgress.findOne({"token":token})
+  else
+  return CalculationProgress.findOne({"token":token}).populate("requiredLines")
 }
 
 async function modifyCalculationProgress(token, newProgress) {
@@ -212,6 +215,7 @@ async function modifyCalculationProgress(token, newProgress) {
 }
 
 function setCalculationTarget(token, variants){
+  variants=variants.map(v=> v._id)
   console.log("Setting lines to", variants)
   let doc = CalculationProgress.findOneAndUpdate({"token":token}, 
         {$set:{requiredLines: variants}}, {new:true}).then(()=>{
