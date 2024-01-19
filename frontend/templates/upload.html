@@ -6,6 +6,7 @@
     <form action="/analysis/add" method="post" enctype="multipart/form-data">
         <input type="file" id="file" name="file" accept=".tsv, .vcf">
         <br>
+        {% if algs %}
         <div id="algs-container">
             {% for alg in algs %}
                 <div class="form-check form-check-inline">
@@ -16,6 +17,9 @@
                 </div>
             {% endfor %}
         </div>
+        {% else %}
+        <p>Brak dostępnych algorytmów</p>
+        {% endif %}
         <button type="submit" onclick="validateForm()">Wyślij</button>
     </form>
     <script src="{{ url_for('static', filename='validate.js') }}"></script>
