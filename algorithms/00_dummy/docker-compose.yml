@@ -1,0 +1,9 @@
+---
+version: "3"
+services:
+  dummy:
+    container_name: dummy
+    network_mode: "host"
+    build:
+      context: ./containers/dummy
+      dockerfile: Dockerfile

@@ -1,0 +1,9 @@
+---
+version: "3"
+services:
+  pangolin:
+    container_name: pangilin
+    network_mode: "host"
+    build:
+      context: ./containers/00_container1
+      dockerfile: Dockerfile
