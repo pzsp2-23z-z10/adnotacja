@@ -5,5 +5,5 @@ services:
     container_name: SPiP
     network_mode: "host"
     build:
-      context: ./containers/01_container2
+      context: ./containers/01_container1
       dockerfile: Dockerfile

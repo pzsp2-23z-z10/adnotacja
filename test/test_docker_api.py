@@ -21,3 +21,5 @@ def test_status():
 
 # def test_status_invalid_token():
 # 	assert requests.get(url+"/status/nonsense").status_code == 404
+
+test_status()
