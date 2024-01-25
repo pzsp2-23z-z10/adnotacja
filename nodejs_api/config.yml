@@ -1,9 +1,9 @@
 files:
   temp_dir: "/tmp/anotacje/"
 services:
-  SPiP:
+  pangolin:
     address: "localhost"
     port: 6000
-  pangolin:
+  SPiP:
     address: "localhost"
     port: 5000

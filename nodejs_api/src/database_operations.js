@@ -37,6 +37,22 @@ async function setServiceStatus(name, status){
   let service = await ServiceStatus.findOneAndUpdate({ service_id: name }, {$set:{active_token:status}})
 }
 
+async function isAnalysisDone(id){
+  // lighter version of getAnalysis, without populating the results
+  let progress = await getCalculationProgress(id, populate=false);
+	if (progress===null)
+	{
+		console.log("this token is not in database.")
+		return {error:"Unknown token"}
+	}
+	else if (Object.values(progress.progress).includes(false))
+	{
+		return false
+	}
+  console.log("analysis done:",progress.progress)
+  return true
+}
+
 async function getAnalysis(id){
 	
 	console.log("Somebody asked for analysis id:",id)
@@ -132,25 +148,19 @@ async function findLinesInDb(lines, column_positions, name=null) {
   var promises = lines.map(async function (line) {
     if (line[0] != '#') {
       var elements = line.split(/\t+/);
-      var values = [elements[indices[0]], elements[indices[1]], elements[indices[2]], elements[indices[3]]];
+      var values = [elements[indices[0]], elements[indices[1]], elements[indices[3]], elements[indices[4]]];
 
       var genotype = await getGenotype(values[0], values[1], values[2], values[3]);
 
-      if (genotype.length != 0) {
+      if (genotype && genotype.result && genotype.result[name]) {
         //console.log("Found in db: " + line);
         var all_results = '';
-        for (let i = 0; i < genotype.length; i++) {
-          genotype[i].result.forEach((nestedItem) => {
-            all_results += nestedItem.name + " " + nestedItem.value + " "
-          });
+        for (service in genotype.result){
+          all_results += name + " (length)" + genotype.result[name].length + " "
         }
-        if (all_results[name]!=undefined){
-          have_results.push(line + all_results);
-        }
-        else{
-          no_results.push(line);
-        }
-      } else {
+        have_results.push(line+all_results)
+      }
+      else{
         no_results.push(line);
       }
     }
@@ -173,7 +183,7 @@ async function addGenotype(chr, pos, ref, alt, result) {
 }
 
 async function getGenotype(chr, pos, ref, alt) {
-  return Genotype.find({$and:[{"chr":chr}, {"pos":pos}, {"ref":ref}, {"alt":alt}]})
+  return Genotype.findOne({$and:[{"chr":chr}, {"pos":pos}, {"ref":ref}, {"alt":alt}]})
 }
 async function addCalculationProgress(progress) {
     let state = new CalculationProgress (progress);
@@ -197,7 +207,7 @@ async function modifyCalculationProgress(token, newProgress) {
           console.error("calculation progress for "+token+" not found!")
         }
         else{
-          console.log("Successfully updated record", updatedRecord);
+          console.log("Successfully updated calculation status for", token);
 
         }
     })
@@ -220,5 +230,5 @@ async function saveResults(service_name, rows, column_positions){
   console.log("Save results from",service_name,":",variants.length)
 }
 
-module.exports = {setCalculationTarget, linesToVariants, saveResults, findLinesInDb, setServiceStatus, isServiceBusy,initServices,getAnalysis, addAnalysis, addGenotype, addCalculationProgress,modifyCalculationProgress, getCalculationProgress, getGenotype}
+module.exports = {isAnalysisDone, setCalculationTarget, linesToVariants, saveResults, findLinesInDb, setServiceStatus, isServiceBusy,initServices,getAnalysis, addAnalysis, addGenotype, addCalculationProgress,modifyCalculationProgress, getCalculationProgress, getGenotype}
 

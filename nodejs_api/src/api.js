@@ -113,14 +113,18 @@ async function checkQueues(){
         if (status['done']==true){
           console.log("done")
           let token = queue.pop(name); //remove from queue
-          let progress = db.getCalculationProgress(token)
-          progress[name]=true
-          db.modifyCalculationProgress(token,progress)
+          let result = await db.getCalculationProgress(token)
+          result.progress[name]=true
+          db.modifyCalculationProgress(token,result.progress)
           console.log("Parsing result...")
           let [header, lines] = vcf.parseArray(status['result'])
           db.saveResults(name,lines,header)
           db.setServiceStatus(name,"free")
-          util.cleanUp(token)
+          if (!Object.values(result.progress).includes(false))
+          {
+            console.log("deleting file:",token)
+            util.cleanUp(token)
+          }
         }
       }
       else{
@@ -133,17 +137,33 @@ async function checkQueues(){
         console.log("Have results: ")
         console.log(results.have_results)
 
-        results.no_results.unshift(header.join("\t"));
-        let result = await outer_connections.requestCalculation(results.no_results, value['address'], value['port'])
-        if (result=="ok"){
-          // only when calculation start is confirmed, make service busy and remember what lines user wants 
-          db.setServiceStatus(name,queue.peek(name));
-          let variants = await db.linesToVariants(lines, header)
-          console.log("got variants",variants.length)
-          db.setCalculationTarget(token,variants) // what the user wants
+        if (results.no_results.length!=0){
+          // some lines are not available, send them
+          results.no_results.unshift(header.join("\t"));
+          let result = await outer_connections.requestCalculation(results.no_results, value['address'], value['port'])
+
+          if (result=="ok"){
+            // only when calculation start is confirmed, make service busy and remember what lines user wants 
+            db.setServiceStatus(name,queue.peek(name));
+            let variants = await db.linesToVariants(lines, header)
+            console.log("got variants",variants.length)
+            db.setCalculationTarget(token,variants) // what the user wants
+          }
+          else{
+            console.error("Something went wrong:",result)
+          }
         }
         else{
-          console.error("Something went wrong:",result)
+          // nothing needs to be calculated
+          console.log("skipping queue")
+          // still, figure out what the user wants from database
+          let variants = await db.linesToVariants(lines, header)
+          db.setCalculationTarget(token,variants) 
+          queue.pop(name); //remove from queue, just read the database later
+          let result = await db.getCalculationProgress(token)
+          result.progress[name]=true
+          db.modifyCalculationProgress(token,result.progress)
+
         }
       }
     }

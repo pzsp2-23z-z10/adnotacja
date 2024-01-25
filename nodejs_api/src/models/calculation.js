@@ -15,8 +15,8 @@ let calculationProgressSchema = new mongoose.Schema({
 
 function getEmptyProgress(services){
     let progress = {}
-    for (const [name, value] of Object.entries(services)){
-        progress[name]=false
+    for (let service of services.services){
+        progress[service]=false
     }
     return progress
 }
